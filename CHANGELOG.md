@@ -1,5 +1,5 @@
 ======================================================================
-CHANGES for Slice2Java Eclipse Plug-in 3.5.1.XXX
+CHANGES for Slice2Java Eclipse Plug-in 3.6.0.XXX
 ======================================================================
 
 This file describes the change history for the Slice2Java Eclipse
