@@ -13,17 +13,11 @@ the generated code to eliminate obsolete files.
    </description>
 
    <copyright url="https://www.zeroc.com">
-      Copyright (c) 2003-2015 ZeroC, Inc. All rights reserved
+      Copyright (c) 2008-2015 ZeroC, Inc. All rights reserved
 This copy of the slice2java eclipse plugin is licensed to you
 under the terms described in the license agreement attached to
 this distribution.
    </copyright>
-
-   <license url="http://www.eclipse.org/legal/epl-v10.html">
-      This plug-in is provided to you under the terms and conditions
-of the Eclipse Public License Version 1.0 (&quot;EPL&quot;). A copy of
-the EPL is available at http://www.eclipse.org/legal/epl-v10.html.
-   </license>
 
    <plugin
          id="com.zeroc.Slice2JavaPlugin"

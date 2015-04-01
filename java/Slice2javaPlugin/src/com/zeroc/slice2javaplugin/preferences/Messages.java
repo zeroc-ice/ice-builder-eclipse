@@ -1,3 +1,9 @@
+// **********************************************************************
+//
+// Copyright (c) 2008-2015 ZeroC, Inc. All rights reserved.
+//
+// **********************************************************************
+
 package com.zeroc.slice2javaplugin.preferences;
 
 import org.eclipse.osgi.util.NLS;

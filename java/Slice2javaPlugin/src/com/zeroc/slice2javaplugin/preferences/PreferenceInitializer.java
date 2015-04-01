@@ -1,10 +1,6 @@
 // **********************************************************************
 //
-// Copyright (c) 2003-2015 ZeroC, Inc. All rights reserved.
-//
-// This plug-in is provided to you under the terms and conditions
-// of the Eclipse Public License Version 1.0 ("EPL"). A copy of
-// the EPL is available at http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (c) 2008-2015 ZeroC, Inc. All rights reserved.
 //
 // **********************************************************************
 
