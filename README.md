@@ -1,6 +1,14 @@
 # Ice Builder for Eclipse
 
-The Ice Builder for Eclipse provides an eclipse Slice2Java plug-in which manages compilation of [Slice](https://doc.zeroc.com/display/Ice/The+Slice+Language) files using the Slice-to-Java compiler.
+The Ice Builder for Eclipse provides a `Slice2Java` plug-in which automates the compilation of [Slice](https://doc.zeroc.com/display/Ice/The+Slice+Language) files using the [Slice-to-Java](https://doc.zeroc.com/display/Ice/slice2java+Command-Line+Options) compiler and manages the resulting generated code.
+
+The `Slice2Java` plug-in provides the following features:
+
+  - Handles all aspects of translating your Slice files
+  - Incrementally recompiles Slice files after modifications
+  - Maintains dependencies between Slice files
+  - Highlights compilation errors in your source code
+  - Manages the generated code to remove obsolete files automatically
 
 # Build Instructions
 
@@ -8,15 +16,29 @@ In order to build the plug-in, you will need an installation of Eclipse Helios
 (3.6) or Indigo (3.7) suitable for plug-in development.
 
 It will be necessary to install the Eclipse Plug-in Development Environment
-if it is not already installed. Go to Help > Eclipse Marketplace and search
+if it is not already installed. Go to `Help > Eclipse Marketplace` and search
 for PDE, then click install to install the Eclipse PDE.
 
-To import the project choose File > Import > General > Existing Projects into Workspace
+To import the project choose `File > Import > General > Existing Projects into Workspace`
 and select the java directory in this repository as the root directory.
 
-To create the plugin use File > Export > Plug-in Development > Deployable plug-ins and fragments.
+To create the plugin use `File > Export > Plug-in Development > Deployable plug-ins and fragments`.
 
 # Usage
+
+## Installing the Plug-in
+
+ZeroC hosts an Eclipse plug-in site that you can add to your Eclipse configuration. Follow these steps to install the `Slice2Java` plug-in:
+
+  1. From the `Help` menu, choose `Install New Software`
+  2. Click the `Add` button
+  3. Enter a name in the `Name` field, such as `ZeroC`
+  4. In the `Location` field, enter `https://zeroc.com/download/eclipse`
+  5. Click `OK`
+  6. Select the `Slice2Java` plug-in and click `Next`
+  7. Click `Next` again
+  8. If you agree to the license terms, check the box and click `Finish`
+  9. Click `OK` if you are warned about unsigned content
 
 ## Configuring the Plug-in
 
