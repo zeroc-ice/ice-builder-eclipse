@@ -10,6 +10,18 @@ The `Slice2Java` plug-in provides the following features:
   - Highlights compilation errors in your source code
   - Manages the generated code to remove obsolete files automatically
 
+# Contents
+
+- [Build Instructions](#build-instructions)
+- [Usage](#usage)
+  - [Installing the Plug-in](#installing-the-plug-in)
+  - [Configuring the Plug-in](#configuring-the-plug-in)
+  - [Activating the Plug-in for a Project](#activating-the-plug-in-for-a-project)
+  - [Configuring Project Settings](#configuring-project-settings)
+    - [Settings in the Source Tab](#settings-in-the-source-tab)
+    - [Settings in the Options Tab](#settings-in-the-options-tab)
+  - [Configuring File Settings](#configuring-file-settings)
+
 # Build Instructions
 
 In order to build the plug-in, you will need an installation of Eclipse Helios
