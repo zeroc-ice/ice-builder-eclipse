@@ -73,7 +73,7 @@ To configure the project-specific settings, select `Properties` from the `Projec
 
 This tab configures the directories of your Slice files and generated code. The plug-in includes the `slice` subdirectory by default, but you can remove this directory and add other directories if necessary. The plug-in only compiles Slice files that are located in the configured subdirectories.
 
-For the generated code, the plug-in uses the default name `generated` for the subdirectory. If you want to store your generated code in a different directory, you must first create the directory and then click `Browse` to select it. The new directory must be empty otherwise the plug-in will reject your change. The plug-in also requires exclusive use of this directory, therefore you must not place other project resources in it.
+For the generated code, the plug-in uses the default name `generated` for the subdirectory. If you want to store your generated code in a different directory, you must first create the directory and then click `Browse` to select it. The new directory must be empty, otherwise the plug-in will reject your change. The plug-in also requires exclusive use of this directory, therefore you must not place other project resources in it.
 
 ### Settings in the Options Tab
 
