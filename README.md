@@ -34,7 +34,7 @@ for PDE, then click install to install the Eclipse PDE.
 To import the project choose `File > Import > General > Existing Projects into Workspace`
 and select the java directory in this repository as the root directory.
 
-To create the plugin use `File > Export > Plug-in Development > Deployable plug-ins and fragments`.
+To create the plug-in, use `File > Export > Plug-in Development > Deployable plug-ins and fragments`.
 
 # Usage
 
@@ -63,7 +63,7 @@ The plug-in automatically configures a workspace classpath variable named `ICE_J
 You can activate the plug-in for your project by right-clicking on the project, choosing `Slice2Java` and clicking `Add Slice2Java builder`. The plug-in immediately makes several additions to your project:
 * Creates a `slice` subdirectory to contain your Slice files. The plug-in automatically compiles any Slice file that you add to this directory.
 * Creates a `generated` subdirectory to hold the Java source files that the slice2java translator generates from your Slice files.
-* Adds a library reference to the Ice run time JAR file (`Ice.jar`). The plug-in assumes that the JAR file resides in the `lib` subdirectory of your Ice installation.
+* Adds a library reference to the Ice runtime JAR file (`Ice.jar`). The plug-in assumes that the JAR file resides in the `lib` subdirectory of your Ice installation.
 
 ## Configuring Project Settings
 
