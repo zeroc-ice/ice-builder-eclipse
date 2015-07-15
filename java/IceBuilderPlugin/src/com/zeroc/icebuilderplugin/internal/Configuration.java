@@ -230,6 +230,8 @@ public class Configuration
             removeLibrary(javaProject, getJarName("Glacier2"));
             removeLibrary(javaProject, getJarName("IceBox"));
             removeLibrary(javaProject, getJarName("IceGrid"));
+            removeLibrary(javaProject, getJarName("IceDiscovery"));
+            removeLibrary(javaProject, getJarName("IceLocatorDiscovery"));
             removeLibrary(javaProject, getJarName("IcePatch2"));
             removeLibrary(javaProject, getJarName("IceStorm"));
         }
@@ -538,6 +540,9 @@ public class Configuration
                 removeJars.add(getJarName("IceGrid"));
                 removeJars.add(getJarName("IcePatch2"));
                 removeJars.add(getJarName("IceStorm"));
+                removeJars.add(getJarName("IceDiscovery"));
+                removeJars.add(getJarName("IceLocatorDiscovery"));
+                removeJars.add(getJarName("Glacier2"));
                 
                 for(String jar : jars)
                 {

@@ -54,7 +54,8 @@ public class IceClasspathContainerIntializer extends ClasspathContainerInitializ
     
     private static String componentName(String jar)
     {
-        String[] jars = new String[]{"Ice.jar", "Glacier2.jar", "IceBox.jar", "IceStorm.jar", "IceGrid.jar"};
+        String[] jars = new String[]{"Ice.jar", "Glacier2.jar", "IceBox.jar", "IceStorm.jar", "IceGrid.jar",
+                                     "IceDiscovery.jar", "IceLocatorDiscovery.jar", "Freeze.jar", "IcePatch2.jar"};
         for(String f : jars)
         {
             if(f.equals(jar))
@@ -82,6 +83,22 @@ public class IceClasspathContainerIntializer extends ClasspathContainerInitializ
         else if(jar.matches("icegrid-.*"))
         {
             return "IceGrid";
+        }
+        else if(jar.matches("icediscovery-.*"))
+        {
+            return "IceDiscovery";
+        }        
+        else if(jar.matches("icelocatordiscovery-.*"))
+        {
+            return "IceLocatorDiscovery";
+        }
+        else if(jar.matches("freeze-.*"))
+        {
+            return "Freeze";
+        }        
+        else if(jar.matches("icepatch2-.*"))
+        {
+            return "IcePatch2";
         }
         return null;
     }

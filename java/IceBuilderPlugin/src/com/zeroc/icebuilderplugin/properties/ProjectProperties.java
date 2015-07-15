@@ -101,6 +101,14 @@ public class ProjectProperties extends PropertyPage
                 {
                     jars.add(_config.getJarName("IcePatch2"));
                 }
+                if(_iceDiscoveryJar.getSelection())
+                {
+                    jars.add(_config.getJarName("IceDiscovery"));
+                }
+                if(_iceLocatorDiscoveryJar.getSelection())
+                {
+                    jars.add(_config.getJarName("IceLocatorDiscovery"));
+                }
                 _config.setJars(jars);
             }
 
@@ -147,7 +155,7 @@ public class ProjectProperties extends PropertyPage
         _jarsGroup.setText("Add references to the following JAR files:");
 
         GridLayout gridLayout = new GridLayout();
-        gridLayout.numColumns = 7;
+        gridLayout.numColumns = 4;
 
         _jarsGroup.setLayout(gridLayout);
         _jarsGroup.setLayoutData(new GridData(GridData.FILL_BOTH));
@@ -160,9 +168,15 @@ public class ProjectProperties extends PropertyPage
 
         _iceBoxJar = new Button(_jarsGroup, SWT.CHECK);
         _iceBoxJar.setText("IceBox");
+        
+        _iceDiscoveryJar = new Button(_jarsGroup, SWT.CHECK);
+        _iceDiscoveryJar.setText("IceDiscovery");
 
         _iceGridJar = new Button(_jarsGroup, SWT.CHECK);
         _iceGridJar.setText("IceGrid");
+        
+        _iceLocatorDiscoveryJar = new Button(_jarsGroup, SWT.CHECK);
+        _iceLocatorDiscoveryJar.setText("IceLocatorDiscovery");
 
         _icePatch2Jar = new Button(_jarsGroup, SWT.CHECK);
         _icePatch2Jar.setText("IcePatch2");
@@ -231,9 +245,17 @@ public class ProjectProperties extends PropertyPage
             {
                 _iceGridJar.setSelection(true);
             }
+            else if(jarFile.equals(_config.getJarName("IceDiscovery")))
+            {
+                _iceDiscoveryJar.setSelection(true);
+            }
+            else if(jarFile.equals(_config.getJarName("IceLocatorDiscovery")))
+            {
+                _iceLocatorDiscoveryJar.setSelection(true);
+            }
             else if(jarFile.equals(_config.getJarName("IcePatch2")))
             {
-                _icePatch2Jar.equals(true);
+                _icePatch2Jar.setSelection(true);
             }
             else if(jarFile.equals(_config.getJarName("IceStorm")))
             {
@@ -434,6 +456,8 @@ public class ProjectProperties extends PropertyPage
     private Button _glacier2Jar;
     private Button _iceBoxJar;
     private Button _iceGridJar;
+    private Button _iceDiscoveryJar;
+    private Button _iceLocatorDiscoveryJar;
     private Button _icePatch2Jar;
     private Button _iceStormJar;
 
