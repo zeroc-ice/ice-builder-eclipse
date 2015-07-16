@@ -21,6 +21,7 @@ The Ice Builder for Eclipse plug-in provides the following features:
     - [Settings in the Source Tab](#settings-in-the-source-tab)
     - [Settings in the Options Tab](#settings-in-the-options-tab)
   - [Configuring File Settings](#configuring-file-settings)
+- [When does the Plug-In Recompile Slice Files?](#when-does-the-plug-in-recompile-slice-files)
 
 ## Build Instructions
 
