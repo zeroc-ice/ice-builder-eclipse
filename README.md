@@ -10,7 +10,7 @@ The Ice Builder for Eclipse plug-in provides the following features:
   - Highlights compilation errors in your source code
   - Manages the generated code to remove obsolete files automatically
 
-# Contents
+## Contents
 
 - [Build Instructions](#build-instructions)
 - [Usage](#usage)
@@ -22,7 +22,7 @@ The Ice Builder for Eclipse plug-in provides the following features:
     - [Settings in the Options Tab](#settings-in-the-options-tab)
   - [Configuring File Settings](#configuring-file-settings)
 
-# Build Instructions
+## Build Instructions
 
 In order to build the plug-in, you will need an installation of Eclipse Helios
 (3.6) or Indigo (3.7) suitable for plug-in development.
@@ -36,9 +36,9 @@ and select the java directory in this repository as the root directory.
 
 To create the plug-in, use `File > Export > Plug-in Development > Deployable plug-ins and fragments`.
 
-# Usage
+## Usage
 
-## Installing the Plug-in
+### Installing the Plug-in
 
 ZeroC hosts an Eclipse plug-in site that you can add to your Eclipse configuration. Follow these steps to install the `Ice Builder` plug-in:
 
@@ -52,30 +52,30 @@ ZeroC hosts an Eclipse plug-in site that you can add to your Eclipse configurati
   8. If you agree to the license terms, check the box and click `Finish`
   9. Click `OK` if you are warned about unsigned content
 
-## Configuring the Plug-in
+### Configuring the Plug-in
 
 Choose `Window -> Preferences`, select `Ice Builder`, and review the default setting for the location of your Ice installation. The property pane will display an error message if the plug-in considers the specified location to be invalid. If necessary, click `Browse...` to pick the top-level directory of your Ice installation and apply your changes.
 
 The plug-in automatically configures a workspace classpath variable named `ICE_JAR_HOME` that refers to the subdirectory containing the Ice JAR files. This variable is primarily intended for use in Android projects.
 
-## Activating the Plug-in for a Project
+### Activating the Plug-in for a Project
 
 You can activate the plug-in for your project by right-clicking on the project, choosing `Ice Builder` and clicking `Add Ice Builder`. The plug-in immediately makes several additions to your project:
 * Creates a `slice` subdirectory to contain your Slice files. The plug-in automatically compiles any Slice file that you add to this directory.
 * Creates a `generated` subdirectory to hold the Java source files that the slice2java translator generates from your Slice files.
 * Adds a library reference to the Ice runtime JAR file (`Ice.jar`). The plug-in assumes that the JAR file resides in the `lib` subdirectory of your Ice installation.
 
-## Configuring Project Settings
+### Configuring Project Settings
 
 To configure the project-specific settings, select `Properties` from the `Project` menu or right-click on the name of your project and choose `Properties`. Click on `Ice Builder` to view the plug-in's configuration settings, which are presented in two tabs: Source and Options.
 
-### Settings in the Source Tab
+#### Settings in the Source Tab
 
 This tab configures the directories of your Slice files and generated code. The plug-in includes the `slice` subdirectory by default, but you can remove this directory and add other directories if necessary. The plug-in only compiles Slice files that are located in the configured subdirectories.
 
 For the generated code, the plug-in uses the default name `generated` for the subdirectory. If you want to store your generated code in a different directory, you must first create the directory and then click `Browse` to select it. The new directory must be empty; otherwise the plug-in will reject your change. The plug-in also requires exclusive use of this directory; therefore, you must not place other project resources in it.
 
-### Settings in the Options Tab
+#### Settings in the Options Tab
 
 This tab is where you configure additional plug-in settings. You can enter a list of include directories corresponding to the compiler's -I option. You can also specify preprocessor macros and metadata definitions in the fields provided. Finally, checkboxes offer additional control over certain features of the plug-in and the Slice compiler. When enabled, the checkboxes have the following semantics:
 * __Enable streaming__ generates code to support the dynamic streaming API
@@ -86,6 +86,14 @@ This tab is where you configure additional plug-in settings. You can enter a lis
 
 Options are also provided for adding reference to libraries for the various Ice services, such as IceGrid and Glacier2.
 
-## Configuring File Settings
+### Configuring File Settings
 
 The project settings described above serve as the default compiler settings for all Slice files in the project. You may also override the compiler settings on a per-file basis by selecting a Slice file in `Package Explorer` and choosing `Properties` from the `File` menu, or by right-clicking on the file and choosing `Properties`. Select `Ice Builder` to configure the Slice compiler settings, which have the same semantics as those in the `Options` tab described earlier.
+
+## When does the Plug-in Recompile Slice Files?
+
+Slice files will be recompiled if either of the following are true:
+ * This Slice file or another Slice file in the project included directly or indirectly by this Slice file was updated after the last compilation of the Slice file through the plug-in.
+ * The options used to compile this Slice file have changed.
+
+Removing a Slice file from a project will trigger the removal of the corresponding generated `.java` files.
