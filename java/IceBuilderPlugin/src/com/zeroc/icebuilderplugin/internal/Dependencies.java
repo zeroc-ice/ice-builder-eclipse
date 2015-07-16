@@ -56,9 +56,9 @@ public class Dependencies
         _project = project;
         _projectResources = LprojectResources;
         _err = err;
-        
+
         // Build a map of location to project resource.
-        
+
         for(IFile f : _projectResources)
         {
             _locationToResource.put(f.getLocation(), f);
@@ -326,11 +326,11 @@ public class Dependencies
         }
         return store.getFileStore(new Path("dependencies.xml"));
     }
-    
+
     private static class Slice2JavaDependenciesParser
     {
         Map<String, List<String>> dependencies = new java.util.HashMap<String, List<String>>();
-        
+
         private Node findNode(Node n, String qName)
             throws SAXException
         {
@@ -383,7 +383,7 @@ public class Dependencies
             }
             return depends;
         }
-        
+
         public void visit(Node doc) throws SAXException
         {
             Node n = findNode(doc, "dependencies");
@@ -465,7 +465,7 @@ public class Dependencies
                 }
             }
         }
-        
+
         public void visitErrorList(Set<IFile> s, Node n) throws SAXException
         {
             NodeList children = n.getChildNodes();
@@ -513,7 +513,7 @@ public class Dependencies
 
     // A map of slice file to java source files.
     public Map<IFile, Set<IFile>> sliceJavaDependencies = new java.util.HashMap<IFile, Set<IFile>>();
-    
+
     // A set of slice files that have not, or cannot be built.
     public Set<IFile> errorSliceFiles = new java.util.HashSet<IFile>();
 
