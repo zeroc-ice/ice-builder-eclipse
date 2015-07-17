@@ -504,8 +504,8 @@ public class Dependencies
 
     // A map of slice to dependencies.
     //
-    // sliceSliceDependencies is the set of slice files that depend on the IFile
-    // (the output of slice2java --depend).
+    // sliceSliceDependencies is the set of slice files on which the IFile depends
+    // (the output of slice2java --depend-xml).
     //
     // _reverseSliceSliceDependencies is the reverse.
     public Map<IFile, Set<IFile>> sliceSliceDependencies = new java.util.HashMap<IFile, Set<IFile>>();

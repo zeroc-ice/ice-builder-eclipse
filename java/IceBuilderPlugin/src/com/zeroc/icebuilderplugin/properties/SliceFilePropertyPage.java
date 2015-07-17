@@ -28,7 +28,7 @@ public class SliceFilePropertyPage extends PropertyPage
     public SliceFilePropertyPage()
     {
         super(false);
-        setTitle("Slice2as Settings");
+        setTitle("Slice2Java Settings");
     }
 
     protected void createPreOptions(Composite parent)
@@ -59,7 +59,6 @@ public class SliceFilePropertyPage extends PropertyPage
         {
             TabItem tabItem = new TabItem(tabFolder, SWT.NONE);
             
-            
             Control source = createOptions(tabFolder);
             tabItem.setText("Options");
             tabItem.setControl(source);
@@ -75,7 +74,7 @@ public class SliceFilePropertyPage extends PropertyPage
         final IResource resource = getResource();
         _config.setIncludes(resource, Arrays.asList(_includes.getItems()));
         _config.setDefines(resource, Configuration.toList(_defines.getText()));
-        _config.setStream(_stream.getSelection());
+        _config.setStream(resource, _stream.getSelection());
         _config.setMeta(resource, Configuration.toList(_meta.getText()));
         _config.setTie(resource, _tie.getSelection());
         _config.setIce(resource, _ice.getSelection());
@@ -97,7 +96,7 @@ public class SliceFilePropertyPage extends PropertyPage
 
         _defines.setText(Configuration.fromList(_config.getDefines(resource)));
         _meta.setText(Configuration.fromList(_config.getMeta(resource)));
-        _stream.setSelection(_config.getStream());
+        _stream.setSelection(_config.getStream(resource));
         _tie.setSelection(_config.getTie(resource));
         _ice.setSelection(_config.getIce(resource));
         _underscore.setSelection(_config.getUnderscore(resource));
