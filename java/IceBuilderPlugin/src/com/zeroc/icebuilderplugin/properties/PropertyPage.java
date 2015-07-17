@@ -255,7 +255,7 @@ public abstract class PropertyPage extends org.eclipse.ui.dialogs.PropertyPage
         composite.setLayoutData(new GridData(GridData.FILL_BOTH));
 
         Label l = new Label(composite, SWT.WRAP);
-        l.setText("Enter metadata (';' separated). For example, enter as:package:com.acme to define --meta=as:package:com.acme.");
+        l.setText("Enter metadata (';' separated). For example, enter java:package:com.acme to define --meta=java:package:com.acme.");
         GridData gridData = new GridData(GridData.FILL_BOTH);
         gridData.widthHint = 400;
         l.setLayoutData(gridData);

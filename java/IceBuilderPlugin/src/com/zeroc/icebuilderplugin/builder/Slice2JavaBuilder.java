@@ -395,7 +395,7 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
             env = builder.environment();
             Configuration.setupSharedLibraryPath(env);
 
-            status = runSliceCompiler(builder, state, out, err);
+            status = runSliceCompiler(builder, state, depend, out, err);
         }
 
         for(Iterator<IFile> p = resourcesWithArguments.iterator(); p.hasNext();)
@@ -416,14 +416,14 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
             env = builder.environment();
             Configuration.setupSharedLibraryPath(env);
 
-            status = runSliceCompiler(builder, state, out, err);
+            status = runSliceCompiler(builder, state, depend, out, err);
         }
 
         return status;
     }
 
     private int
-    runSliceCompiler(ProcessBuilder builder, BuildState state, StringBuffer out, StringBuffer err)
+    runSliceCompiler(ProcessBuilder builder, BuildState state, boolean depend, StringBuffer out, StringBuffer err)
         throws CoreException
     {
         try
@@ -463,10 +463,13 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
                 {
                     state.err.println("slice2java status: " + status);
                 }
-                StringBuffer reason = err == null ? out : err;
-                if(!isXML(reason))
+                if(!depend)
                 {
-                    throw new RuntimeException(reason.toString());
+                    StringBuffer reason = err == null ? out : err;
+                    if(!isXML(reason))
+                    {
+                        throw new RuntimeException(reason.toString());
+                    }
                 }
             }
 
