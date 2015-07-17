@@ -52,6 +52,8 @@ ZeroC hosts an Eclipse plug-in site that you can add to your Eclipse configurati
   8. If you agree to the license terms, check the box and click `Finish`
   9. Click `OK` if you are warned about unsigned content
 
+Note: If you are upgrading from the old `Slice2Java` plug-in, you should uninstall the old plug-in before installing the `Ice Builder` plug-in. After installation it will be necessary to manually reconfigure the `Ice Builder` settings. The old `Slice2java` settings are not automatically migrated.
+
 ### Configuring the Plug-in
 
 Choose `Window -> Preferences`, select `Ice Builder`, and review the default setting for the location of your Ice installation. The property pane will display an error message if the plug-in considers the specified location to be invalid. If necessary, click `Browse...` to pick the top-level directory of your Ice installation and apply your changes.
