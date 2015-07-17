@@ -42,7 +42,7 @@ public class Activator extends AbstractUIPlugin
 {
 
     // The plug-in ID
-    public static final String PLUGIN_ID = "com.zeroc.Slice2JavaPlugin";
+    public static final String PLUGIN_ID = "com.zeroc.IceBuilderPlugin";
     
     /**
      * The constructor

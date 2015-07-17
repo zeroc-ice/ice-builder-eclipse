@@ -10,7 +10,7 @@ import org.eclipse.osgi.util.NLS;
 
 public class Messages extends NLS
 {
-    private static final String BUNDLE_NAME = "com.zeroc.slice2javaplugin.preferences.messages"; //$NON-NLS-1$
+    private static final String BUNDLE_NAME = "com.zeroc.icebuilderplugin.preferences.messages"; //$NON-NLS-1$
     public static String IceStringVersion;
     static
     {

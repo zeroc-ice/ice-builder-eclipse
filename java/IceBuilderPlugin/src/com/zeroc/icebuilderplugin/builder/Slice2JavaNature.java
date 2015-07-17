@@ -19,7 +19,7 @@ public class Slice2JavaNature implements IProjectNature
     /**
      * ID of this project nature
      */
-    public static final String NATURE_ID = "com.zeroc.Slice2JavaPlugin.Slice2JavaNature";
+    public static final String NATURE_ID = "com.zeroc.IceBuilderPlugin.Slice2JavaNature";
 
     /*
      * (non-Javadoc)

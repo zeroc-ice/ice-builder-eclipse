@@ -25,7 +25,7 @@ import org.eclipse.jdt.core.JavaModelException;
 
 public class IceClasspathContainerIntializer extends ClasspathContainerInitializer
 {
-    private final static String CONTAINER_ID = "com.zeroc.Slice2JavaPlugin.ICE_FRAMEWORK";
+    private final static String CONTAINER_ID = "com.zeroc.IceBuilderPlugin.ICE_FRAMEWORK";
 
     @Override
     public void initialize(IPath containerPath, IJavaProject project)
