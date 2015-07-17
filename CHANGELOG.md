@@ -2,14 +2,19 @@
 CHANGES for Ice Builder for Eclipse 4.0.0.XXX
 ======================================================================
 
-This file describes the change history for the Slice2Java Eclipse
+This file describes the change history for the Ice Builder for Eclipse
 plug-in.
 
 ======================================================================
 Changes since version 3.5.1.20131004
 ======================================================================
 
-- Support for 3.6.0
+- Rebranded the Slice2Java Plugin as Ice Builder for Eclipse
+
+- Support for Ice 3.6.0
+
+- Fixed a bug where setting stream on Slice file would set it for the
+  entire project.
 
 
 ======================================================================

@@ -25,8 +25,7 @@ The Ice Builder for Eclipse plug-in provides the following features:
 
 ## Build Instructions
 
-In order to build the plug-in, you will need an installation of Eclipse Helios
-(3.6) or Indigo (3.7) suitable for plug-in development.
+In order to build the plug-in, you will need an installation of Eclipse suitable for plug-in development.
 
 It will be necessary to install the Eclipse Plug-in Development Environment
 if it is not already installed. Go to `Help > Eclipse Marketplace` and search

@@ -457,9 +457,17 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
                 errThread.join();
             }
 
-            if(status != 0 && state.err != null)
+            if(status != 0)
             {
-                state.err.println("slice2java status: " + status);
+                if(state.err != null)
+                {
+                    state.err.println("slice2java status: " + status);
+                }
+                StringBuffer reason = err == null ? out : err;
+                if(!isXML(reason))
+                {
+                    throw new RuntimeException(reason.toString());
+                }
             }
 
             return status;
@@ -1244,6 +1252,29 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
                 }
             }
         }
+    }
+    
+    private boolean
+    isXML(StringBuffer s)
+    {
+        try
+        {
+            InputStream in = new ByteArrayInputStream(s.toString().getBytes());
+            DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new BufferedInputStream(in));
+        }
+        catch(SAXException e)
+        {
+            return false;
+        }
+        catch(ParserConfigurationException e)
+        {
+            return false;
+        }
+        catch(IOException e)
+        {
+            return false;
+        }
+        return true;  
     }
 
     private Slice2JavaGeneratedParser getGeneratedFiles(BuildState state, Set<IFile> candidates, StringBuffer out)
