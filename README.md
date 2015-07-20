@@ -2,6 +2,8 @@
 
 The Ice Builder for Eclipse provides a plug-in which automates the compilation of [Slice](https://doc.zeroc.com/display/Ice/The+Slice+Language) files using the [Slice-to-Java](https://doc.zeroc.com/display/Ice/slice2java+Command-Line+Options) compiler and manages the resulting generated code.
 
+An [Ice](https://github.com/zeroc-ice/ice) installation with `slice2java` version 3.4.2 or higher is required.
+
 The Ice Builder for Eclipse plug-in provides the following features:
 
   - Handles all aspects of translating your Slice files
@@ -84,7 +86,7 @@ This tab is where you configure additional plug-in settings. You can enter a lis
 * __Enable tie__ generates TIE classes
 * __Enable ice__ instructs the compiler to accept Slice symbols that use the ice prefix
 * __Enable console__ causes the plug-in to emit diagnostic information about its activities to Eclipse's console
-* __Enable underscore__ determines whether underscores are permitted in Slice identifiers (this feature is only supported in Ice 3.4.1 or later)
+* __Enable underscore__ determines whether underscores are permitted in Slice identifiers
 
 Options are also provided for adding reference to libraries for the various Ice services, such as IceGrid and Glacier2.
 
