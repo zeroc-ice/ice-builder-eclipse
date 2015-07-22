@@ -54,6 +54,12 @@ ZeroC hosts an Eclipse plug-in site that you can add to your Eclipse configurati
   8. If you agree to the license terms, check the box and click `Finish`
   9. Click `OK` if you are warned about unsigned content
 
+Alternately, you can install the plug-in from the Eclipse Marketplace.
+
+  1. From the `Help` menu, choose `Eclipse Marketplace`
+  2. Search for `Ice Builder`
+  3. Click `Install` to install the `Ice Builder` plug-in
+
 Note: If you are upgrading from the old `Slice2Java` plug-in, you should uninstall the old plug-in before installing the `Ice Builder` plug-in. After installation it will be necessary to manually reconfigure the `Ice Builder` settings. The old `Slice2java` settings are not automatically migrated.
 
 ### Configuring the Plug-in
