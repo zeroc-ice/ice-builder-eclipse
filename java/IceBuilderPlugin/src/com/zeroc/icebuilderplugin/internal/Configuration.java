@@ -40,7 +40,7 @@ public class Configuration
     {
         _project = project;
 
-        _instanceStore = new ScopedPreferenceStore(new InstanceScope(), Activator.PLUGIN_ID + "." + _project.getName());
+        _instanceStore = new ScopedPreferenceStore(InstanceScope.INSTANCE, Activator.PLUGIN_ID + "." + _project.getName());
 
         _store = new ScopedPreferenceStore(new ProjectScope(project), Activator.PLUGIN_ID);
 

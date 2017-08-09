@@ -1,90 +1,89 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.2"?>
 <plugin>
-
-   <extension
-         id="com.zeroc.IceBuilderPlugin.Slice2JavaBuilder"
-         name="Ice Builder"
-         point="org.eclipse.core.resources.builders">
-      <builder
+    <extension
+        id="com.zeroc.IceBuilderPlugin.Slice2JavaBuilder"
+        name="Ice Builder"
+        point="org.eclipse.core.resources.builders">
+        <builder
             hasNature="true"
             isConfigurable="true">
-         <run
-               class="com.zeroc.icebuilderplugin.builder.Slice2JavaBuilder">
-         </run>
-      </builder>
-   </extension>
-   <extension
-         id="com.zeroc.IceBuilderPlugin.Slice2JavaNature"
-         name="Ice Builder Nature"
-         point="org.eclipse.core.resources.natures">
-      <runtime>
-         <run
-               class="com.zeroc.icebuilderplugin.builder.Slice2JavaNature">
-         </run>
-      </runtime>
-      <builder
+            <run
+                class="com.zeroc.icebuilderplugin.builder.Slice2JavaBuilder">
+            </run>
+        </builder>
+    </extension>
+    <extension
+        id="com.zeroc.IceBuilderPlugin.Slice2JavaNature"
+        name="Ice Builder Nature"
+        point="org.eclipse.core.resources.natures">
+        <runtime>
+            <run
+                class="com.zeroc.icebuilderplugin.builder.Slice2JavaNature">
+            </run>
+        </runtime>
+        <builder
             id="com.zeroc.IceBuilderPlugin.Slice2JavaBuilder">
-      </builder>
-   </extension>
-   <extension
-         point="org.eclipse.ui.popupMenus">
-      <objectContribution
+        </builder>
+    </extension>
+    <extension
+        point="org.eclipse.ui.popupMenus">
+        <objectContribution
             adaptable="true"
-            objectClass="org.eclipse.core.resources.IProject"
-            id="IceBuilderPlugin.contribution1">
-         <menu
-               id="IceBuilderPlugin.menu1"
-               label="%menu.label.0">
-            <separator
-                  name="IceBuilderPlugin.separator1">
-            </separator>
-         </menu>
-         <visibility>
-                 <objectState
-                  name="projectNature"
-                  value="com.zeroc.IceBuilderPlugin.Slice2JavaNature">
-            </objectState>
-         </visibility>
-         <action
-               class="com.zeroc.icebuilderplugin.builder.ToggleNatureAction"
-               enablesFor="*"             
-               id="com.zeroc.IceBuilderPlugin.removeNatureAction"
-               label="%action.label.0"
-               menubarPath="IceBuilderPlugin.menu1/IceBuilderPlugin.separator1">
-         </action>
-      </objectContribution>
-      <objectContribution
+            id="IceBuilderPlugin.contribution1"
+            objectClass="org.eclipse.core.resources.IProject">
+            <menu
+                id="IceBuilderPlugin.menu1"
+                label="%menu.label.0">
+                <separator
+                    name="IceBuilderPlugin.separator1">
+                </separator>
+            </menu>
+            <visibility>
+                <objectState
+                    name="projectNature"
+                    value="com.zeroc.IceBuilderPlugin.Slice2JavaNature">
+                </objectState>
+            </visibility>
+            <action
+                class="com.zeroc.icebuilderplugin.builder.ToggleNatureAction"
+                enablesFor="*"             
+                id="com.zeroc.IceBuilderPlugin.removeNatureAction"
+                label="%action.label.0"
+                menubarPath="IceBuilderPlugin.menu1/IceBuilderPlugin.separator1">
+            </action>
+        </objectContribution>
+        <objectContribution
             adaptable="true"
             id="IceBuilderPlugin.contribution2"
             objectClass="org.eclipse.core.resources.IProject">
-         <menu
-               id="IceBuilderPlugin.menu2"
-               label="%menu.label.1">
-            <separator
-                  name="IceBuilderPlugin.separator1">
-            </separator>
-         </menu>
-         <visibility>
-                 <not>
-            <objectState
-                  name="projectNature"
-                  value="com.zeroc.IceBuilderPlugin.Slice2JavaNature">
-            </objectState>
-            </not>
-         </visibility>
-         <action
-               class="com.zeroc.icebuilderplugin.builder.ToggleNatureAction"
-               enablesFor="*"
-               id="IceBuilderPlugin.addNatureAction"
-               label="%action.label.1"
-               menubarPath="IceBuilderPlugin.menu2/IceBuilderPlugin.separator1">
-         </action>
-      </objectContribution>
-   </extension>
-   <extension
-         point="org.eclipse.ui.propertyPages">
-      <page
+            <menu
+                id="IceBuilderPlugin.menu2"
+                label="%menu.label.1">
+                <separator
+                    name="IceBuilderPlugin.separator1">
+                </separator>
+            </menu>
+            <visibility>
+                <not>
+                    <objectState
+                        name="projectNature"
+                        value="com.zeroc.IceBuilderPlugin.Slice2JavaNature">
+                    </objectState>
+                </not>
+            </visibility>
+            <action
+                class="com.zeroc.icebuilderplugin.builder.ToggleNatureAction"
+                enablesFor="*"
+                id="IceBuilderPlugin.addNatureAction"
+                label="%action.label.1"
+                menubarPath="IceBuilderPlugin.menu2/IceBuilderPlugin.separator1">
+            </action>
+        </objectContribution>
+    </extension>
+    <extension
+        point="org.eclipse.ui.propertyPages">
+        <page
             class="com.zeroc.icebuilderplugin.properties.ProjectProperties"
             id="com.zeroc.icebuilderplugin.properties.ProjectProperties"
             name="%page.name.0">
@@ -93,76 +92,80 @@
                     <test property="org.eclipse.core.resources.projectNature" value="com.zeroc.IceBuilderPlugin.Slice2JavaNature"/>
                 </adapt>
             </enabledWhen>
-      </page>
-      <page
+        </page>
+        <page
             class="com.zeroc.icebuilderplugin.properties.SliceFilePropertyPage"
             id="com.zeroc.icebuilderplugin.properties.SliceFilePropertyPage"
             name="%page.name.0"
             nameFilter="*.ice">
-         <enabledWhen>
-            <adapt type="org.eclipse.core.resources.IFile">
-                  <test property="org.eclipse.core.resources.projectNature" value="com.zeroc.IceBuilderPlugin.Slice2JavaNature"/>
-            </adapt>
-         </enabledWhen>
-      </page>
-   </extension> 
-   <extension
-         point="org.eclipse.jdt.core.classpathContainerInitializer">
-      <classpathContainerInitializer
+            <enabledWhen>
+                <adapt type="org.eclipse.core.resources.IFile">
+                    <test property="org.eclipse.core.resources.projectNature" value="com.zeroc.IceBuilderPlugin.Slice2JavaNature"/>
+                </adapt>
+            </enabledWhen>
+        </page>
+    </extension> 
+    <extension
+        point="org.eclipse.jdt.core.classpathContainerInitializer">
+        <classpathContainerInitializer
             class="com.zeroc.icebuilderplugin.internal.IceClasspathContainerIntializer"
             id="com.zeroc.IceBuilderPlugin.ICE_FRAMEWORK">
-      </classpathContainerInitializer>
-   </extension>
-   <extension
-           point="org.eclipse.jdt.core.classpathVariableInitializer">
-       <classpathVariableInitializer
-           variable="ICE_JAR_HOME"
-           class="com.zeroc.icebuilderplugin.internal.IceClasspathVariableInitializer"/>
-   </extension>
-   <extension
-         point="org.eclipse.ui.preferencePages">
-      <page
+        </classpathContainerInitializer>
+    </extension>
+    <extension
+        point="org.eclipse.jdt.core.classpathVariableInitializer">
+        <classpathVariableInitializer
+            variable="ICE_JAR_HOME"
+            class="com.zeroc.icebuilderplugin.internal.IceClasspathVariableInitializer"/>
+    </extension>
+    <extension
+        point="org.eclipse.ui.preferencePages">
+        <page
             class="com.zeroc.icebuilderplugin.preferences.PluginPreferencePage"
             id="com.zeroc.icebuilderplugin.preferences.PluginPreferencePage"
             name="Ice Builder">
-      </page>
-   </extension>
-   <extension
-         point="org.eclipse.core.runtime.preferences">
-      <initializer
+        </page>
+    </extension>
+    <extension
+        point="org.eclipse.core.runtime.preferences">
+        <initializer
             class="com.zeroc.icebuilderplugin.preferences.PreferenceInitializer">
-      </initializer>
-   </extension>
-   <extension
-            point="org.eclipse.core.runtime.contentTypes">
+        </initializer>
+    </extension>
+    <extension
+        point="org.eclipse.core.contenttype.contentTypes">
         <content-type id="Slice"
             name="Slice source file"
             base-type="org.eclipse.core.runtime.text"
             file-extensions="ice"/>
-   </extension>
-   <extension
-         point="org.eclipse.ui.decorators">
+    </extension>
+    <extension
+        point="org.eclipse.ui.decorators">
         <decorator
             id="com.zeroc.icebuilderplugin.decorator.GeneratedDecorator"
             label="Generated slice2java sources"
             state="true"
             class= "com.zeroc.icebuilderplugin.decorator.GeneratedDecorator"
-            objectClass="org.eclipse.core.resources.IResource"
             adaptable="true">
             <description>
-            Decorator for slice2java generated source code.
+                Decorator for slice2java generated source code.
             </description>
+            <enablement>
+                <objectClass name="org.eclipse.core.resources.IResource"/>
+            </enablement>
         </decorator> 
         <decorator
             id="com.zeroc.icebuilderplugin.decorator.SliceDecorator"
             label="Slice sources"
             state="true"
             class= "com.zeroc.icebuilderplugin.decorator.SliceDecorator"
-            objectClass="org.eclipse.core.resources.IResource"
             adaptable="true">
             <description>
-            Decorator for Slice source code.
+                Decorator for Slice source code.
             </description>
+            <enablement>
+                <objectClass name="org.eclipse.core.resources.IResource"/>
+            </enablement>
         </decorator> 
-   </extension>
+    </extension>
 </plugin>

@@ -64,7 +64,7 @@ public class Activator extends AbstractUIPlugin
         super.start(context);
         _plugin = this;
         
-        IEclipsePreferences prefs = new InstanceScope().getNode(PLUGIN_ID);
+        IEclipsePreferences prefs = InstanceScope.INSTANCE.getNode(PLUGIN_ID);
         // set the listener for the preference change
         //Preferences prefs = getPluginPreferences();
         prefs.addPreferenceChangeListener(new IPreferenceChangeListener()
