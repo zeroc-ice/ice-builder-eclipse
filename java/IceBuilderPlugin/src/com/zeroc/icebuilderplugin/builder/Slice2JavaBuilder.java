@@ -155,12 +155,6 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
                 generated.create(false, true, monitor);
             }
 
-            _sourceLocations = new HashSet<IFolder>();
-            for(Iterator<String> p = config.getSliceSourceDirs().iterator(); p.hasNext();)
-            {
-                _sourceLocations.add(project.getFolder(p.next()));
-            }
-
             project.accept(new IResourceVisitor()
             {
                 public boolean visit(IResource resource)
@@ -231,17 +225,7 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
             String ext = file.getFileExtension();
             if(ext != null && ext.equals("ice"))
             {
-                //
-                // The parent may not be an IFolder (e.g., it could be a Project).
-                //
-                if(file.getParent() instanceof IFolder)
-                {
-                    IFolder folder = (IFolder)file.getParent();
-                    if(_sourceLocations.contains(folder))
-                    {
-                        return true;
-                    }
-                }
+                return true;
             }
             return false;
         }
@@ -272,7 +256,6 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
         Configuration config;
         Dependencies dependencies;
         IFolder generated;
-        private Set<IFolder> _sourceLocations;
 
         private Set<IFile> _resources = new HashSet<IFile>();
         private Set<IFile> _deltaCandidates = new HashSet<IFile>();
@@ -317,65 +300,24 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
 
         cmd.addAll(state.config.getCommandLine());
 
-        Set<IFile> resourcesWithArguments = new  HashSet<IFile>();
+        ProcessBuilder builder = new ProcessBuilder(cmd);
+        IPath rootLocation = getProject().getLocation();
 
-        boolean allHasOptions = true;
         for(Iterator<IFile> p = files.iterator(); p.hasNext();)
         {
-            IFile f = p.next();
-            if(!Configuration.resourceHasOptions(f))
-            {
-                allHasOptions = false;
-                cmd.add(f.getLocation().toOSString());
-            }
-            else
-            {
-                resourcesWithArguments.add(f);
-            }
+            cmd.add(p.next().getLocation().toOSString());
         }
-
-        ProcessBuilder builder;
-        IPath rootLocation = getProject().getLocation();
-        Map<String, String> env;
-        int status = 0;
-
-        if(!allHasOptions)
+        
+        if(err == null)
         {
-            builder = new ProcessBuilder(cmd);
-            if(err == null)
-            {
-                builder.redirectErrorStream(true);
-            }
-
-            builder.directory(rootLocation.toFile());
-            env = builder.environment();
-            Configuration.setupSharedLibraryPath(env);
-
-            status = runSliceCompiler(builder, state, depend, out, err);
+            builder.redirectErrorStream(true);
         }
 
-        for(Iterator<IFile> p = resourcesWithArguments.iterator(); p.hasNext();)
-        {
-            IFile f = p.next();
-            cmd = new LinkedList<String>();
-            cmd.addAll(cmdBase);
-            cmd.addAll(state.config.getCommandLine(f));
+        builder.directory(rootLocation.toFile());
+        Map<String, String> env = builder.environment();
+        Configuration.setupSharedLibraryPath(env);
 
-            cmd.add(f.getLocation().toOSString());
-
-            builder = new ProcessBuilder(cmd);
-            if(err == null)
-            {
-                builder.redirectErrorStream(true);
-            }
-            builder.directory(rootLocation.toFile());
-            env = builder.environment();
-            Configuration.setupSharedLibraryPath(env);
-
-            status = runSliceCompiler(builder, state, depend, out, err);
-        }
-
-        return status;
+        return runSliceCompiler(builder, state, depend, out, err);
     }
 
     private int

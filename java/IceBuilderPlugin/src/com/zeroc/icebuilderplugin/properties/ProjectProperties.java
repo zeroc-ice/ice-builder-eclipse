@@ -32,7 +32,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Text;
@@ -63,7 +62,6 @@ public class ProjectProperties extends PropertyPage
         try
         {
             _config.setGeneratedDir(_generatedDir.getText());
-            _config.setSliceSourceDirs(Arrays.asList(_sourceDirectories.getItems()));
             _config.setIncludes(Arrays.asList(_includes.getItems()));
             _config.setDefines(Configuration.toList(_defines.getText()));
             _config.setMeta(Configuration.toList(_meta.getText()));
@@ -218,10 +216,6 @@ public class ProjectProperties extends PropertyPage
         _config = new Configuration(project);
 
         _generatedDir.setText(_config.getGeneratedDir());
-        for(Iterator<String> iter = _config.getSliceSourceDirs().iterator(); iter.hasNext();)
-        {
-            _sourceDirectories.add(iter.next());
-        }
         for(Iterator<String> iter = _config.getBareIncludes().iterator(); iter.hasNext();)
         {
             _includes.add(iter.next());
@@ -301,69 +295,6 @@ public class ProjectProperties extends PropertyPage
         gridLayout.numColumns = 1;
         composite.setLayout(gridLayout);
 
-        Group sourceGroup = new Group(composite, SWT.NONE);
-        sourceGroup.setText("Location of Slice Source Files");
-        gridLayout = new GridLayout();
-        gridLayout.numColumns = 1;
-        sourceGroup.setLayout(gridLayout);
-        sourceGroup.setLayoutData(new GridData(GridData.FILL_BOTH));
-
-        Composite c1 = new Composite(sourceGroup, SWT.NONE);
-
-        gridLayout = new GridLayout();
-        gridLayout.numColumns = 2;
-        c1.setLayout(gridLayout);
-        c1.setLayoutData(new GridData(GridData.FILL_BOTH));
-
-        _sourceDirectories = new List(c1, SWT.H_SCROLL | SWT.V_SCROLL | SWT.MULTI | SWT.BORDER);
-        _sourceDirectories.setLayoutData(new GridData(GridData.FILL_BOTH));
-
-        Composite c2 = new Composite(c1, SWT.NONE);
-
-        gridLayout = new GridLayout();
-        gridLayout.numColumns = 1;
-        c2.setLayout(gridLayout);
-
-        Button but1 = new Button(c2, SWT.PUSH);
-        but1.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        but1.setText("Add Folder");
-        but1.addSelectionListener(new SelectionAdapter()
-        {
-            public void widgetSelected(SelectionEvent e)
-            {
-                IProject project = getProject();
-
-                SourceSelectionDialog dialog = new SourceSelectionDialog(getShell(), project, "Select Source Location");
-                String[] items = _sourceDirectories.getItems();
-                IFolder[] resources = new IFolder[items.length];
-                for(int i = 0; i < items.length; ++i)
-                {
-                    resources[i] = project.getFolder(items[i]);
-                }
-                dialog.setInitialSelections(resources);
-                if(dialog.open() == ContainerSelectionDialog.OK)
-                {
-                    Object[] selection = dialog.getResult();
-                    for(int i = 0; i < selection.length; ++i)
-                    {
-                        IFolder path = (IFolder) selection[i];
-                        _sourceDirectories.add(path.getProjectRelativePath().toString());
-                    }
-                }
-            }
-        });
-
-        Button but2 = new Button(c2, SWT.PUSH);
-        but2.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        but2.setText("Remove");
-        but2.addSelectionListener(new SelectionAdapter()
-        {
-            public void widgetSelected(SelectionEvent e)
-            {
-                _sourceDirectories.remove(_sourceDirectories.getSelectionIndices());
-            }
-        });
-
         Group gclGroup = new Group(composite, SWT.NONE);
         gclGroup.setText("Generated Code Location");
         gridLayout = new GridLayout();
@@ -413,7 +344,6 @@ public class ProjectProperties extends PropertyPage
 
                 SourceSelectionDialog dialog = new SourceSelectionDialog(getShell(), project,
                         "Select Generated Code Location");
-                dialog.setMultiple(false);
                 if(dialog.open() == ContainerSelectionDialog.OK)
                 {
                     Object[] selection = dialog.getResult();
@@ -462,6 +392,5 @@ public class ProjectProperties extends PropertyPage
     private Button _iceStormJar;
 
     private Text _generatedDir;
-    private List _sourceDirectories;
     private Group _jarsGroup;
 }

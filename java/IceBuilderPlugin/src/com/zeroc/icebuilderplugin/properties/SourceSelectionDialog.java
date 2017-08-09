@@ -34,7 +34,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 class SourceSelectionDialog extends SelectionDialog
 {
     // Do we allow multiple selections?
-    private boolean multiple = true;
+    private boolean multiple = false;
     
     // the root element to populate the viewer with
     private IProject root;

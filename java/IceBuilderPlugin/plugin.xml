@@ -47,7 +47,7 @@
             </visibility>
             <action
                 class="com.zeroc.icebuilderplugin.builder.ToggleNatureAction"
-                enablesFor="*"             
+                enablesFor="*"
                 id="com.zeroc.IceBuilderPlugin.removeNatureAction"
                 label="%action.label.0"
                 menubarPath="IceBuilderPlugin.menu1/IceBuilderPlugin.separator1">
@@ -93,18 +93,7 @@
                 </adapt>
             </enabledWhen>
         </page>
-        <page
-            class="com.zeroc.icebuilderplugin.properties.SliceFilePropertyPage"
-            id="com.zeroc.icebuilderplugin.properties.SliceFilePropertyPage"
-            name="%page.name.0"
-            nameFilter="*.ice">
-            <enabledWhen>
-                <adapt type="org.eclipse.core.resources.IFile">
-                    <test property="org.eclipse.core.resources.projectNature" value="com.zeroc.IceBuilderPlugin.Slice2JavaNature"/>
-                </adapt>
-            </enabledWhen>
-        </page>
-    </extension> 
+    </extension>
     <extension
         point="org.eclipse.jdt.core.classpathContainerInitializer">
         <classpathContainerInitializer
@@ -153,19 +142,6 @@
             <enablement>
                 <objectClass name="org.eclipse.core.resources.IResource"/>
             </enablement>
-        </decorator> 
-        <decorator
-            id="com.zeroc.icebuilderplugin.decorator.SliceDecorator"
-            label="Slice sources"
-            state="true"
-            class= "com.zeroc.icebuilderplugin.decorator.SliceDecorator"
-            adaptable="true">
-            <description>
-                Decorator for Slice source code.
-            </description>
-            <enablement>
-                <objectClass name="org.eclipse.core.resources.IResource"/>
-            </enablement>
-        </decorator> 
+        </decorator>
     </extension>
 </plugin>

@@ -409,20 +409,6 @@ public abstract class PropertyPage extends org.eclipse.ui.dialogs.PropertyPage
         }
     }
     
-    protected IResource getResource()
-    {
-        IAdaptable a = getElement();
-        if(a instanceof IResource)
-        {
-            return (IResource)a;
-        }
-        else
-        {
-            assert(false);
-            return null;
-        }
-    }
-    
     protected boolean configSaveAndRebuild()
     {
         final IProject project = getProject();
