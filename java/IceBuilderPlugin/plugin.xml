@@ -40,10 +40,16 @@
                 </separator>
             </menu>
             <visibility>
-                <objectState
-                    name="projectNature"
-                    value="com.zeroc.IceBuilderPlugin.Slice2JavaNature">
-                </objectState>
+                <and>
+                    <objectState
+                        name="projectNature"
+                        value="com.zeroc.IceBuilderPlugin.Slice2JavaNature">
+                    </objectState>
+                    <objectState
+                        name="projectNature"
+                        value="org.eclipse.jdt.core.javanature">
+                    </objectState>
+                </and>
             </visibility>
             <action
                 class="com.zeroc.icebuilderplugin.builder.ToggleNatureAction"
@@ -65,12 +71,18 @@
                 </separator>
             </menu>
             <visibility>
-                <not>
+                <and>
+                    <not>
+                        <objectState
+                            name="projectNature"
+                            value="com.zeroc.IceBuilderPlugin.Slice2JavaNature">
+                        </objectState>
+                    </not>
                     <objectState
                         name="projectNature"
-                        value="com.zeroc.IceBuilderPlugin.Slice2JavaNature">
+                        value="org.eclipse.jdt.core.javanature">
                     </objectState>
-                </not>
+                </and>
             </visibility>
             <action
                 class="com.zeroc.icebuilderplugin.builder.ToggleNatureAction"
