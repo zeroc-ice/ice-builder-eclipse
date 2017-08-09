@@ -99,7 +99,7 @@ public class Activator extends AbstractUIPlugin
             public void preferenceChange(PreferenceChangeEvent event)
             {
                 String property = event.getKey();
-                if(PluginPreferencePage.SDK_PATH.equals(property))
+                if(PluginPreferencePage.ICE_HOME.equals(property))
                 {
                     IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
                     IJavaModel javaModel = JavaCore.create(workspaceRoot);

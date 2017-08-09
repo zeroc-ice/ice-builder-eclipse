@@ -7,11 +7,9 @@
 package com.zeroc.icebuilderplugin.builder;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -58,6 +56,7 @@ import org.xml.sax.SAXException;
 import com.zeroc.icebuilderplugin.Activator;
 import com.zeroc.icebuilderplugin.internal.Configuration;
 import com.zeroc.icebuilderplugin.internal.Dependencies;
+import com.zeroc.icebuilderplugin.util.StreamReader;
 
 public class Slice2JavaBuilder extends IncrementalProjectBuilder
 {
@@ -135,49 +134,6 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
         {
             state.dependencies.write();
         }
-    }
-
-    static class StreamReaderThread extends Thread
-    {
-        public StreamReaderThread(InputStream in, StringBuffer out)
-        {
-            _in = new BufferedReader(new InputStreamReader(in), 1024);
-            _out = out;
-        }
-
-        public void run()
-        {
-            try
-            {
-                char[] buf = new char[1024];
-                while(true)
-                {
-                    int read = _in.read(buf);
-                    if(read == -1)
-                    {
-                        break;
-                    }
-                    _out.append(buf, 0, read);
-                }
-            }
-            catch(Exception e)
-            {
-            }
-            finally
-            {
-                try
-                {
-                    _in.close();
-                }
-                catch(IOException e1)
-                {
-                    e1.printStackTrace();
-                }
-            }
-        }
-
-        private StringBuffer _out;
-        private BufferedReader _in;
     }
 
     static class BuildState
@@ -440,12 +396,12 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
 
             Process proc = builder.start();
 
-            StreamReaderThread outThread = new StreamReaderThread(proc.getInputStream(), out);
+            StreamReader outThread = new StreamReader(proc.getInputStream(), out);
             outThread.start();
-            StreamReaderThread errThread = null;
+            StreamReader errThread = null;
             if(err != null)
             {
-                errThread = new StreamReaderThread(proc.getErrorStream(), err);
+                errThread = new StreamReader(proc.getErrorStream(), err);
                 errThread.start();
             }
 

@@ -884,7 +884,7 @@ public class Configuration
 
     private static String getIceHome()
     {
-        return Activator.getDefault().getPreferenceStore().getString(PluginPreferencePage.SDK_PATH);
+        return Activator.getDefault().getPreferenceStore().getString(PluginPreferencePage.ICE_HOME);
     }
 
     // For some reason ScopedPreferenceStore.setValue(String, String)
