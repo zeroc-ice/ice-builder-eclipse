@@ -85,20 +85,13 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
 
         try
         {
-            if(kind == FULL_BUILD)
+            if((kind == FULL_BUILD) || (delta == null) || state.config.getExtraArguments().contains("--checksum"))
             {
                 fullBuild(state, monitor);
             }
             else
             {
-                if(delta == null)
-                {
-                    fullBuild(state, monitor);
-                }
-                else
-                {
-                    incrementalBuild(state, monitor);
-                }
+                incrementalBuild(state, monitor);
             }
         }
         finally
