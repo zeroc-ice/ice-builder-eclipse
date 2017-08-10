@@ -7,7 +7,6 @@
 package com.zeroc.icebuilderplugin.properties;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 
@@ -24,16 +23,12 @@ import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.TabFolder;
-import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.ContainerSelectionDialog;
 
@@ -46,7 +41,6 @@ public class ProjectProperties extends PropertyPage
 {
     public ProjectProperties()
     {
-        super(true);
         setTitle("Slice2Java Settings");
         noDefaultAndApplyButton();
     }
@@ -64,54 +58,9 @@ public class ProjectProperties extends PropertyPage
         {
             _config.setGeneratedDir(_generatedDir.getText());
             _config.setIncludes(Arrays.asList(_includes.getItems()));
-            _config.setDefines(Configuration.toList(_defines.getText()));
-            _config.setMeta(Configuration.toList(_meta.getText()));
-            _config.setStream(_stream.getSelection());
-            _config.setTie(_tie.getSelection());
-            _config.setIce(_ice.getSelection());
-            _config.setUnderscore(_underscore.getSelection());
-            _config.setConsole(_console.getSelection());
             _config.setExtraArguments(_extraArguments.getText());
-            if(_config.getAddJars())
-            {
-                java.util.List<String> jars = new ArrayList<String>();
-                jars.add(_config.getJarName("Ice"));
-                if(_freezeJar.getSelection())
-                {
-                    jars.add(_config.getJarName("Freeze"));
-                }
-                if(_glacier2Jar.getSelection())
-                {
-                    jars.add(_config.getJarName("Glacier2"));
-                }
-                if(_iceBoxJar.getSelection())
-                {
-                    jars.add(_config.getJarName("IceBox"));
-                }
-                if(_iceStormJar.getSelection())
-                {
-                    jars.add(_config.getJarName("IceStorm"));
-                }
-                if(_iceGridJar.getSelection())
-                {
-                    jars.add(_config.getJarName("IceGrid"));
-                }
-                if(_icePatch2Jar.getSelection())
-                {
-                    jars.add(_config.getJarName("IcePatch2"));
-                }
-                if(_iceDiscoveryJar.getSelection())
-                {
-                    jars.add(_config.getJarName("IceDiscovery"));
-                }
-                if(_iceLocatorDiscoveryJar.getSelection())
-                {
-                    jars.add(_config.getJarName("IceLocatorDiscovery"));
-                }
-                _config.setJars(jars);
-            }
 
-            if(_config.write() && getPreferenceStore().getBoolean(PluginPreferencePage.REBUILD_AUTO))
+            if(_config.write() && Activator.getDefault().getPreferenceStore().getBoolean(PluginPreferencePage.BUILD_AUTO))
             {
                 // The configuration properties were changed. We need to rebuild the slice files.
                 Job job = new Job("Rebuild")
@@ -147,40 +96,82 @@ public class ProjectProperties extends PropertyPage
         return true;
     }
 
-    protected void createPostOptions(Composite composite)
+    protected void createPreOptions(Composite parent)
     {
-        _jarsGroup = new Group(composite, SWT.NONE);
-        _jarsGroup.setText("Add references to the following JAR files:");
-
+        Group gclGroup = new Group(parent, SWT.NONE);
+        gclGroup.setText("Generated Code Directory");
         GridLayout gridLayout = new GridLayout();
-        gridLayout.numColumns = 4;
+        gridLayout.numColumns = 1;
+        gclGroup.setLayout(gridLayout);
+        gclGroup.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
-        _jarsGroup.setLayout(gridLayout);
-        _jarsGroup.setLayoutData(new GridData(GridData.FILL_BOTH));
+        Composite tc = new Composite(gclGroup, SWT.NONE);
+        gridLayout = new GridLayout();
+        gridLayout.numColumns = 1;
+        tc.setLayout(gridLayout);
+        tc.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
-        _freezeJar = new Button(_jarsGroup, SWT.CHECK);
-        _freezeJar.setText("Freeze");
+        Composite c = new Composite(tc, SWT.NONE);
 
-        _glacier2Jar = new Button(_jarsGroup, SWT.CHECK);
-        _glacier2Jar.setText("Glacier2");
+        GridLayout gridLayout2 = new GridLayout();
+        gridLayout2.numColumns = 2;
+        gridLayout2.marginLeft = 0;
+        gridLayout2.marginTop = 0;
+        gridLayout2.marginBottom = 0;
+        c.setLayout(gridLayout2);
 
-        _iceBoxJar = new Button(_jarsGroup, SWT.CHECK);
-        _iceBoxJar.setText("IceBox");
-        
-        _iceDiscoveryJar = new Button(_jarsGroup, SWT.CHECK);
-        _iceDiscoveryJar.setText("IceDiscovery");
+        c.setLayoutData(new GridData(GridData.FILL_BOTH));
 
-        _iceGridJar = new Button(_jarsGroup, SWT.CHECK);
-        _iceGridJar.setText("IceGrid");
-        
-        _iceLocatorDiscoveryJar = new Button(_jarsGroup, SWT.CHECK);
-        _iceLocatorDiscoveryJar.setText("IceLocatorDiscovery");
+        _generatedDir = new Text(c, SWT.BORDER | SWT.READ_ONLY);
+        _generatedDir.setToolTipText("Directory where generated files are created.");
+        GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
+        // gridData.horizontalSpan = 2;
+        _generatedDir.setLayoutData(gridData);
 
-        _icePatch2Jar = new Button(_jarsGroup, SWT.CHECK);
-        _icePatch2Jar.setText("IcePatch2");
+        Button but3 = new Button(c, SWT.PUSH);
+        but3.setText("Browse");
+        but3.addSelectionListener(new SelectionAdapter()
+        {
+            public void widgetSelected(SelectionEvent e)
+            {
+                IProject project = getProject();
 
-        _iceStormJar = new Button(_jarsGroup, SWT.CHECK);
-        _iceStormJar.setText("IceStorm");
+                DirectorySelectionDialog dialog = new DirectorySelectionDialog(getShell(), project,
+                        "Select the Generated Code Directory");
+                if(dialog.open() == ContainerSelectionDialog.OK)
+                {
+                    Object[] selection = dialog.getResult();
+                    if(selection.length == 1)
+                    {
+                        IFolder path = (IFolder) selection[0];
+                        String oldPath = _generatedDir.getText();
+                        String newPath = path.getProjectRelativePath().toString();
+                        if(oldPath.equals(newPath))
+                        {
+                            return;
+                        }
+                        try
+                        {
+                            if(path.members().length > 0)
+                            {
+                                ErrorDialog.openError(getShell(), "Error",
+                                        "The generated code directory should be an empty folder", new Status(Status.ERROR,
+                                                Activator.PLUGIN_ID, "The chosen directory '"
+                                                        + path.getFullPath().toOSString() + "' is not empty."));
+                                return;
+                            }
+                        }
+                        catch(CoreException ex)
+                        {
+                            ErrorDialog.openError(getShell(), "Error", ex.toString(), new Status(Status.ERROR,
+                                    Activator.PLUGIN_ID, 0, "Failed to set the generated code directory.", ex));
+                            return;
+                        }
+                        _generatedDir.setText(newPath);
+                    }
+                }
+            }
+        });
     }
 
     /**
@@ -188,26 +179,11 @@ public class ProjectProperties extends PropertyPage
      */
     protected Control createContents(Composite parent)
     {
-        // Composite composite = new Composite(parent, SWT.NONE);
-
-        TabFolder tabFolder = new TabFolder(parent, SWT.NONE);
-        {
-            TabItem tabItem = new TabItem(tabFolder, SWT.NONE);
-            tabItem.setText("Source");
-            Control source = createSource(tabFolder);
-            tabItem.setControl(source);
-        }
-        {
-            TabItem tabItem = new TabItem(tabFolder, SWT.NONE);
-            tabItem.setText("Options");
-            Control source = createOptions(tabFolder);
-            tabItem.setControl(source);
-        }
-        tabFolder.pack();
+        Control source = createOptions(parent);
 
         loadPrefs();
 
-        return tabFolder;
+        return source;
     }
 
     private void loadPrefs()
@@ -220,55 +196,7 @@ public class ProjectProperties extends PropertyPage
         {
             _includes.add(iter.next());
         }
-        for(Iterator<String> iter = _config.getJars().iterator(); iter.hasNext();)
-        {
-            String jarFile = iter.next();
-            if(jarFile.equals(_config.getJarName("Freeze")))
-            {
-                _freezeJar.setSelection(true);
-            }
-            else if(jarFile.equals(_config.getJarName("Glacier2")))
-            {
-                _glacier2Jar.setSelection(true);
-            }
-            else if(jarFile.equals(_config.getJarName("IceBox")))
-            {
-                _iceBoxJar.setSelection(true);
-            }
-            else if(jarFile.equals(_config.getJarName("IceGrid")))
-            {
-                _iceGridJar.setSelection(true);
-            }
-            else if(jarFile.equals(_config.getJarName("IceDiscovery")))
-            {
-                _iceDiscoveryJar.setSelection(true);
-            }
-            else if(jarFile.equals(_config.getJarName("IceLocatorDiscovery")))
-            {
-                _iceLocatorDiscoveryJar.setSelection(true);
-            }
-            else if(jarFile.equals(_config.getJarName("IcePatch2")))
-            {
-                _icePatch2Jar.setSelection(true);
-            }
-            else if(jarFile.equals(_config.getJarName("IceStorm")))
-            {
-                _iceStormJar.setSelection(true);
-            }
-        }
-        _defines.setText(Configuration.fromList(_config.getDefines()));
-        _meta.setText(Configuration.fromList(_config.getMeta()));
-        _stream.setSelection(_config.getStream());
-        _tie.setSelection(_config.getTie());
-        _ice.setSelection(_config.getIce());
-        _underscore.setSelection(_config.getUnderscore());
-        _console.setSelection(_config.getConsole());
         _extraArguments.setText(_config.getExtraArguments());
-
-        //
-        // Android projects don't support Freeze.
-        //
-        _freezeJar.setEnabled(!_config.isAndroidProject());
 
         checkValid();
     }
@@ -287,110 +215,7 @@ public class ProjectProperties extends PropertyPage
         setErrorMessage(null);
     }
 
-    private Control createSource(Composite parent)
-    {
-        Composite composite = new Composite(parent, SWT.NONE);
-
-        GridLayout gridLayout = new GridLayout();
-        gridLayout.numColumns = 1;
-        composite.setLayout(gridLayout);
-
-        Group gclGroup = new Group(composite, SWT.NONE);
-        gclGroup.setText("Generated Code Location");
-        gridLayout = new GridLayout();
-        gridLayout.numColumns = 1;
-        gclGroup.setLayout(gridLayout);
-        gclGroup.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-
-        Composite tc = new Composite(gclGroup, SWT.NONE);
-        gridLayout = new GridLayout();
-        gridLayout.numColumns = 1;
-        tc.setLayout(gridLayout);
-        tc.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-
-        Label l = new Label(tc, SWT.WRAP);
-        l.setForeground(new Color(null, 255, 0, 0));
-        l.setText("This subdirectory is used by the plug-in to manage the source files generated from "
-                + "your Slice definitions. It should not be used for any other purpose. "
-                + "Files added manually are removed during project rebuilds.");
-
-        GridData gridData = new GridData(GridData.FILL_BOTH);
-        gridData.widthHint = 400;
-        l.setLayoutData(gridData);
-
-        Composite c = new Composite(tc, SWT.NONE);
-
-        GridLayout gridLayout2 = new GridLayout();
-        gridLayout2.numColumns = 2;
-        gridLayout2.marginLeft = 0;
-        gridLayout2.marginTop = 0;
-        gridLayout2.marginBottom = 0;
-        c.setLayout(gridLayout2);
-
-        c.setLayoutData(new GridData(GridData.FILL_BOTH));
-
-        _generatedDir = new Text(c, SWT.BORDER | SWT.READ_ONLY);
-        gridData = new GridData(GridData.FILL_HORIZONTAL);
-        // gridData.horizontalSpan = 2;
-        _generatedDir.setLayoutData(gridData);
-
-        Button but3 = new Button(c, SWT.PUSH);
-        but3.setText("Browse");
-        but3.addSelectionListener(new SelectionAdapter()
-        {
-            public void widgetSelected(SelectionEvent e)
-            {
-                IProject project = getProject();
-
-                SourceSelectionDialog dialog = new SourceSelectionDialog(getShell(), project,
-                        "Select Generated Code Location");
-                if(dialog.open() == ContainerSelectionDialog.OK)
-                {
-                    Object[] selection = dialog.getResult();
-                    if(selection.length == 1)
-                    {
-                        IFolder path = (IFolder) selection[0];
-                        String oldPath = _generatedDir.getText();
-                        String newPath = path.getProjectRelativePath().toString();
-                        if(oldPath.equals(newPath))
-                        {
-                            return;
-                        }
-                        try
-                        {
-                            if(path.members().length > 0)
-                            {
-                                ErrorDialog.openError(getShell(), "Error",
-                                        "Generated code location should be an empty folder", new Status(Status.ERROR,
-                                                Activator.PLUGIN_ID, "The chosen directory '"
-                                                        + path.getFullPath().toOSString() + "' is not empty."));
-                                return;
-                            }
-                        }
-                        catch(CoreException ex)
-                        {
-                            ErrorDialog.openError(getShell(), "Error", ex.toString(), new Status(Status.ERROR,
-                                    Activator.PLUGIN_ID, 0, "Failed to set generated code location.", ex));
-                            return;
-                        }
-                        _generatedDir.setText(newPath);
-                    }
-                }
-            }
-        });
-
-        return composite;
-    }
-
-    private Button _freezeJar;
-    private Button _glacier2Jar;
-    private Button _iceBoxJar;
-    private Button _iceGridJar;
-    private Button _iceDiscoveryJar;
-    private Button _iceLocatorDiscoveryJar;
-    private Button _icePatch2Jar;
-    private Button _iceStormJar;
+    protected Configuration _config;
 
     private Text _generatedDir;
-    private Group _jarsGroup;
 }

@@ -73,7 +73,7 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
         throws CoreException
     {
         // Ignore auto builds issued by Eclipse if Ice auto building is off
-        if((kind == AUTO_BUILD) && !Activator.getDefault().getPreferenceStore().getBoolean(PluginPreferencePage.REBUILD_AUTO))
+        if((kind == AUTO_BUILD) && !Activator.getDefault().getPreferenceStore().getBoolean(PluginPreferencePage.BUILD_AUTO))
         {
             return null;
         }
@@ -148,12 +148,9 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
         {
             config = new Configuration(project);
 
-            if(config.getConsole())
-            {
-                initializeConsole();
-                out = _consoleout;
-                err = _consoleerr;
-            }
+            initializeConsole();
+            out = _consoleout;
+            err = _consoleerr;
 
             generated = project.getFolder(config.getGeneratedDir());
             if(!generated.exists())
@@ -267,8 +264,8 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
         private Set<IFile> _deltaCandidates = new HashSet<IFile>();
         private List<IFile> _removed = new ArrayList<IFile>();
 
-        private MessageConsoleStream out = null;
-        private MessageConsoleStream err = null;
+        private MessageConsoleStream out;
+        private MessageConsoleStream err;
 
         static private MessageConsoleStream _consoleout = null;
         static private MessageConsoleStream _consoleerr = null;

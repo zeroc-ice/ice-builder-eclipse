@@ -15,8 +15,8 @@
     </extension>
     <extension
         point="org.eclipse.core.resources.markers"
-        id="com.zeroc.IceBuilderPlugin.marker.BuildProblemMarker"
-        name="%marker.buildProblem">
+        id="com.zeroc.IceBuilderPlugin.marker.IceHomeProblemMarker"
+        name="%marker.iceHomeProblem">
         <super type="org.eclipse.core.resources.problemmarker"/>
         <persistent value="true"/>
     </extension>
@@ -112,19 +112,6 @@
                 </adapt>
             </enabledWhen>
         </page>
-    </extension>
-    <extension
-        point="org.eclipse.jdt.core.classpathContainerInitializer">
-        <classpathContainerInitializer
-            class="com.zeroc.icebuilderplugin.internal.IceClasspathContainerIntializer"
-            id="com.zeroc.IceBuilderPlugin.ICE_FRAMEWORK">
-        </classpathContainerInitializer>
-    </extension>
-    <extension
-        point="org.eclipse.jdt.core.classpathVariableInitializer">
-        <classpathVariableInitializer
-            variable="ICE_JAR_HOME"
-            class="com.zeroc.icebuilderplugin.internal.IceClasspathVariableInitializer"/>
     </extension>
     <extension
         point="org.eclipse.ui.preferencePages">

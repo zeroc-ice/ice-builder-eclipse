@@ -38,8 +38,8 @@ import com.zeroc.icebuilderplugin.internal.Configuration;
 public class PluginPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage
 {
     public static final String ICE_HOME = "pathPreference";
-    public static final String REBUILD_AUTO = "rebuildAutomatically";
-    public static final String ICE_BUILD_PATH_PROBLEM = "com.zeroc.IceBuilderPlugin.marker.BuildProblemMarker";
+    public static final String BUILD_AUTO = "buildAutomatically";
+    public static final String ICE_HOME_PROBLEM = "com.zeroc.IceBuilderPlugin.marker.IceHomeProblemMarker";
 
     public PluginPreferencePage()
     {
@@ -54,7 +54,9 @@ public class PluginPreferencePage extends FieldEditorPreferencePage implements I
      */
     public void createFieldEditors()
     {
-        Group iceHomeGroup = new Group(getFieldEditorParent(), SWT.NONE);
+        Composite parent = getFieldEditorParent();
+
+        Group iceHomeGroup = new Group(parent, SWT.NONE);
         iceHomeGroup.setText("Ice Home");
         GridLayout gridLayout = new GridLayout();
         gridLayout.numColumns = 1;
@@ -64,8 +66,13 @@ public class PluginPreferencePage extends FieldEditorPreferencePage implements I
         Composite composite = new Composite(iceHomeGroup, SWT.NONE);
         composite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
-        addField(new IceHomeDirectoryFieldEditor(ICE_HOME, "&", composite));
-        addField(new BooleanFieldEditor(REBUILD_AUTO, "&Rebuild automatically", getFieldEditorParent()));
+        DirectoryFieldEditor iceHome = new IceHomeDirectoryFieldEditor(ICE_HOME, "", composite);
+        iceHome.getTextControl(composite).setToolTipText("The directory containing your Ice installation.");
+        addField(iceHome);
+
+        BooleanFieldEditor buildAuto = new BooleanFieldEditor(BUILD_AUTO, "&Build automatically", parent);
+        buildAuto.getDescriptionControl(parent).setToolTipText("Sets if the project should be built after saving changes to it.");
+        addField(buildAuto);
     }
 
     /*
@@ -129,16 +136,18 @@ public class PluginPreferencePage extends FieldEditorPreferencePage implements I
 
     public static void addIceHomeWarnings()
     {
-        for(IProject project : org.eclipse.core.resources.ResourcesPlugin.getWorkspace().getRoot().getProjects(IProject.INCLUDE_HIDDEN))
+        for(IProject project :
+            org.eclipse.core.resources.ResourcesPlugin.getWorkspace().getRoot().getProjects(IProject.INCLUDE_HIDDEN))
         {
             try
             {
-                if(project.hasNature(Slice2JavaNature.NATURE_ID))
+                if(project.hasNature(Slice2JavaNature.NATURE_ID) &&
+                        (project.findMarkers(ICE_HOME_PROBLEM, false, IProject.DEPTH_ZERO).length == 0))
                 {
-                    IMarker marker = project.createMarker(ICE_BUILD_PATH_PROBLEM);
+                    IMarker marker = project.createMarker(ICE_HOME_PROBLEM);
                     marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
                     marker.setAttribute(IMarker.PRIORITY, IMarker.PRIORITY_HIGH);
-                    marker.setAttribute(IMarker.LOCATION, "Ice Build Path");
+                    marker.setAttribute(IMarker.LOCATION, "Ice Home");
                     marker.setAttribute(IMarker.MESSAGE, "Cannot locate Slice2Java compiler");
                 }
             }
@@ -148,13 +157,14 @@ public class PluginPreferencePage extends FieldEditorPreferencePage implements I
 
     public static void removeIceHomeWarnings()
     {
-        for(IProject project : org.eclipse.core.resources.ResourcesPlugin.getWorkspace().getRoot().getProjects(IProject.INCLUDE_HIDDEN))
+        for(IProject project :
+            org.eclipse.core.resources.ResourcesPlugin.getWorkspace().getRoot().getProjects(IProject.INCLUDE_HIDDEN))
         {
             try
             {
                 if(project.hasNature(Slice2JavaNature.NATURE_ID))
                 {
-                    project.deleteMarkers(ICE_BUILD_PATH_PROBLEM, false, IProject.DEPTH_ZERO);
+                    project.deleteMarkers(ICE_HOME_PROBLEM, false, IProject.DEPTH_ZERO);
                 }
             }
             catch(CoreException e) {} // Ignored

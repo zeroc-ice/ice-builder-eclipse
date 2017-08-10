@@ -31,8 +31,6 @@ import org.osgi.framework.BundleContext;
 
 import com.zeroc.icebuilderplugin.builder.Slice2JavaBuilder;
 import com.zeroc.icebuilderplugin.builder.Slice2JavaNature;
-import com.zeroc.icebuilderplugin.internal.IceClasspathContainerIntializer;
-import com.zeroc.icebuilderplugin.internal.IceClasspathVariableInitializer;
 import com.zeroc.icebuilderplugin.preferences.PluginPreferencePage;
 
 /**
@@ -99,39 +97,33 @@ public class Activator extends AbstractUIPlugin
             public void preferenceChange(PreferenceChangeEvent event)
             {
                 String property = event.getKey();
-                if(PluginPreferencePage.ICE_HOME.equals(property))
+                if(PluginPreferencePage.ICE_HOME.equals(property) && getPreferenceStore().getBoolean(PluginPreferencePage.BUILD_AUTO))
                 {
                     IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
                     IJavaModel javaModel = JavaCore.create(workspaceRoot);
                     List<IJavaProject> projects = getSlice2JavaProjects(javaModel);
-                    String value = (String)event.getNewValue();
-                    IceClasspathContainerIntializer.updateProjects(value, projects);
-                    IceClasspathVariableInitializer.update();
 
-                    if(getPreferenceStore().getBoolean(PluginPreferencePage.REBUILD_AUTO))
+                    // Need to trigger a clean build of the projects.
+                    for(final IJavaProject p : projects)
                     {
-                        // Need to trigger a clean build of the projects.
-                        for(final IJavaProject p : projects)
+                        Job job = new Job("Rebuild")
                         {
-                            Job job = new Job("Rebuild")
+                            protected IStatus run(IProgressMonitor monitor)
                             {
-                                protected IStatus run(IProgressMonitor monitor)
+                                try
                                 {
-                                    try
-                                    {
-                                        p.getProject().build(IncrementalProjectBuilder.FULL_BUILD, Slice2JavaBuilder.BUILDER_ID, null,
-                                                monitor);
-                                    }
-                                    catch(CoreException e)
-                                    {
-                                        return new Status(Status.ERROR, Activator.PLUGIN_ID, 0, "rebuild failed", e);
-                                    }
-                                    return Status.OK_STATUS;
+                                    p.getProject().build(IncrementalProjectBuilder.FULL_BUILD, Slice2JavaBuilder.BUILDER_ID, null,
+                                            monitor);
                                 }
-                            };
-                            job.setPriority(Job.BUILD);
-                            job.schedule(); // start as soon as possible
-                        }
+                                catch(CoreException e)
+                                {
+                                    return new Status(Status.ERROR, Activator.PLUGIN_ID, 0, "rebuild failed", e);
+                                }
+                                return Status.OK_STATUS;
+                            }
+                        };
+                        job.setPriority(Job.BUILD);
+                        job.schedule(); // start as soon as possible
                     }
                 }
             }

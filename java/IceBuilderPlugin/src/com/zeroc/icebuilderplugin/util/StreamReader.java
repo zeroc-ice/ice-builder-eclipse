@@ -1,3 +1,9 @@
+// **********************************************************************
+//
+// Copyright (c) 2008-2017 ZeroC, Inc. All rights reserved.
+//
+// **********************************************************************
+
 package com.zeroc.icebuilderplugin.util;
 
 import java.io.BufferedReader;

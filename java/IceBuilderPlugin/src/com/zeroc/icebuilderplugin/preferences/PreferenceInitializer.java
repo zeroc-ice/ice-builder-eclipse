@@ -125,7 +125,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer
         IPreferenceStore store = Activator.getDefault().getPreferenceStore();
         
         store.setDefault(PluginPreferencePage.ICE_HOME, getDefaultHome());
-        store.setDefault(PluginPreferencePage.REBUILD_AUTO, true);
+        store.setDefault(PluginPreferencePage.BUILD_AUTO, true);
     }
 
     private static final class VersionComparator implements Comparator<String>
