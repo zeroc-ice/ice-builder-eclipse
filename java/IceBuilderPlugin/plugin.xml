@@ -14,6 +14,13 @@
         </builder>
     </extension>
     <extension
+        point="org.eclipse.core.resources.markers"
+        id="com.zeroc.IceBuilderPlugin.marker.BuildProblemMarker"
+        name="%marker.buildProblem">
+        <super type="org.eclipse.core.resources.problemmarker"/>
+        <persistent value="true"/>
+    </extension>
+    <extension
         id="com.zeroc.IceBuilderPlugin.Slice2JavaNature"
         name="Ice Builder Nature"
         point="org.eclipse.core.resources.natures">

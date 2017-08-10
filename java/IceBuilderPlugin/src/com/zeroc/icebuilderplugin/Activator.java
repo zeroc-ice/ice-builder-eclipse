@@ -107,30 +107,33 @@ public class Activator extends AbstractUIPlugin
                     String value = (String)event.getNewValue();
                     IceClasspathContainerIntializer.updateProjects(value, projects);
                     IceClasspathVariableInitializer.update();
-                    // Need to trigger a clean build of the projects.
-                    for(final IJavaProject p : projects)
+
+                    if(getPreferenceStore().getBoolean(PluginPreferencePage.REBUILD_AUTO))
                     {
-                        Job job = new Job("Rebuild")
+                        // Need to trigger a clean build of the projects.
+                        for(final IJavaProject p : projects)
                         {
-                            protected IStatus run(IProgressMonitor monitor)
+                            Job job = new Job("Rebuild")
                             {
-                                try
+                                protected IStatus run(IProgressMonitor monitor)
                                 {
-                                    p.getProject().build(IncrementalProjectBuilder.FULL_BUILD, Slice2JavaBuilder.BUILDER_ID, null,
-                                            monitor);
+                                    try
+                                    {
+                                        p.getProject().build(IncrementalProjectBuilder.FULL_BUILD, Slice2JavaBuilder.BUILDER_ID, null,
+                                                monitor);
+                                    }
+                                    catch(CoreException e)
+                                    {
+                                        return new Status(Status.ERROR, Activator.PLUGIN_ID, 0, "rebuild failed", e);
+                                    }
+                                    return Status.OK_STATUS;
                                 }
-                                catch(CoreException e)
-                                {
-                                    return new Status(Status.ERROR, Activator.PLUGIN_ID, 0, "rebuild failed", e);
-                                }
-                                return Status.OK_STATUS;
-                            }
-                        };
-                        job.setPriority(Job.BUILD);
-                        job.schedule(); // start as soon as possible
+                            };
+                            job.setPriority(Job.BUILD);
+                            job.schedule(); // start as soon as possible
+                        }
                     }
                 }
-                
             }
         });
     }

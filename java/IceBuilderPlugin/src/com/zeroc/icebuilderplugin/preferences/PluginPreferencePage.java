@@ -6,6 +6,9 @@
 
 package com.zeroc.icebuilderplugin.preferences;
 
+import org.eclipse.core.resources.IMarker;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.preference.*;
 import org.eclipse.swt.SWT;
@@ -18,6 +21,7 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.IWorkbench;
 
 import com.zeroc.icebuilderplugin.Activator;
+import com.zeroc.icebuilderplugin.builder.Slice2JavaNature;
 import com.zeroc.icebuilderplugin.internal.Configuration;
 
 /**
@@ -34,7 +38,9 @@ import com.zeroc.icebuilderplugin.internal.Configuration;
 public class PluginPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage
 {
     public static final String ICE_HOME = "pathPreference";
-    
+    public static final String REBUILD_AUTO = "rebuildAutomatically";
+    public static final String ICE_BUILD_PATH_PROBLEM = "com.zeroc.IceBuilderPlugin.marker.BuildProblemMarker";
+
     public PluginPreferencePage()
     {
         super(GRID);
@@ -59,6 +65,7 @@ public class PluginPreferencePage extends FieldEditorPreferencePage implements I
         composite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
         addField(new IceHomeDirectoryFieldEditor(ICE_HOME, "&", composite));
+        addField(new BooleanFieldEditor(REBUILD_AUTO, "&Rebuild automatically", getFieldEditorParent()));
     }
 
     /*
@@ -92,13 +99,22 @@ public class PluginPreferencePage extends FieldEditorPreferencePage implements I
         {
             String dir = getTextControl().getText();
             dir = dir.trim();
+
             if(!Configuration.verifyIceHome(dir))
             {
-                getPage().setMessage("Invalid Ice Home Directory", IMessageProvider.ERROR);
+                if(!"Invalid Ice Home Directory".equals(getPage().getMessage()))
+                {
+                    getPage().setMessage("Invalid Ice Home Directory", IMessageProvider.ERROR);
+                    addIceHomeWarnings();
+                }
             }
             else
             {
-                clearMessage();
+                if("Invalid Ice Home Directory".equals(getPage().getMessage()))
+                {
+                    clearMessage();
+                    removeIceHomeWarnings();
+                }
             }
             return true;
         }
@@ -108,6 +124,40 @@ public class PluginPreferencePage extends FieldEditorPreferencePage implements I
         {
             setValidateStrategy(VALIDATE_ON_KEY_STROKE);
             return super.getTextControl(parent);
+        }
+    }
+
+    public static void addIceHomeWarnings()
+    {
+        for(IProject project : org.eclipse.core.resources.ResourcesPlugin.getWorkspace().getRoot().getProjects(IProject.INCLUDE_HIDDEN))
+        {
+            try
+            {
+                if(project.hasNature(Slice2JavaNature.NATURE_ID))
+                {
+                    IMarker marker = project.createMarker(ICE_BUILD_PATH_PROBLEM);
+                    marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
+                    marker.setAttribute(IMarker.PRIORITY, IMarker.PRIORITY_HIGH);
+                    marker.setAttribute(IMarker.LOCATION, "Ice Build Path");
+                    marker.setAttribute(IMarker.MESSAGE, "Cannot locate Slice2Java compiler");
+                }
+            }
+            catch(CoreException e) {} // Ignored
+        }
+    }
+
+    public static void removeIceHomeWarnings()
+    {
+        for(IProject project : org.eclipse.core.resources.ResourcesPlugin.getWorkspace().getRoot().getProjects(IProject.INCLUDE_HIDDEN))
+        {
+            try
+            {
+                if(project.hasNature(Slice2JavaNature.NATURE_ID))
+                {
+                    project.deleteMarkers(ICE_BUILD_PATH_PROBLEM, false, IProject.DEPTH_ZERO);
+                }
+            }
+            catch(CoreException e) {} // Ignored
         }
     }
 }

@@ -40,6 +40,7 @@ import org.eclipse.ui.dialogs.ContainerSelectionDialog;
 import com.zeroc.icebuilderplugin.Activator;
 import com.zeroc.icebuilderplugin.builder.Slice2JavaBuilder;
 import com.zeroc.icebuilderplugin.internal.Configuration;
+import com.zeroc.icebuilderplugin.preferences.PluginPreferencePage;
 
 public class ProjectProperties extends PropertyPage
 {
@@ -110,10 +111,9 @@ public class ProjectProperties extends PropertyPage
                 _config.setJars(jars);
             }
 
-            if(_config.write())
+            if(_config.write() && getPreferenceStore().getBoolean(PluginPreferencePage.REBUILD_AUTO))
             {
-                // The configuration properties were changed. We need to rebuild
-                // the slice files.
+                // The configuration properties were changed. We need to rebuild the slice files.
                 Job job = new Job("Rebuild")
                 {
                     protected IStatus run(IProgressMonitor monitor)

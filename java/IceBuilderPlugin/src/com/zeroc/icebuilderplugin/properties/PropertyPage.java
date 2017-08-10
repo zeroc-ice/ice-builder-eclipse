@@ -43,6 +43,7 @@ import org.eclipse.swt.widgets.Text;
 import com.zeroc.icebuilderplugin.Activator;
 import com.zeroc.icebuilderplugin.builder.Slice2JavaBuilder;
 import com.zeroc.icebuilderplugin.internal.Configuration;
+import com.zeroc.icebuilderplugin.preferences.PluginPreferencePage;
 
 public abstract class PropertyPage extends org.eclipse.ui.dialogs.PropertyPage
 {
@@ -414,10 +415,9 @@ public abstract class PropertyPage extends org.eclipse.ui.dialogs.PropertyPage
         final IProject project = getProject();
         try
         {
-            if(_config.write())
+            if(_config.write() && getPreferenceStore().getBoolean(PluginPreferencePage.REBUILD_AUTO))
             {
-                // The configuration properties were changed. We need to rebuild
-                // the slice files.
+                // The configuration properties were changed. We need to rebuild the slice files.
                 Job job = new Job("Rebuild")
                 {
                     protected IStatus run(IProgressMonitor monitor)

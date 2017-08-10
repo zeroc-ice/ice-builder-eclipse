@@ -56,6 +56,7 @@ import org.xml.sax.SAXException;
 import com.zeroc.icebuilderplugin.Activator;
 import com.zeroc.icebuilderplugin.internal.Configuration;
 import com.zeroc.icebuilderplugin.internal.Dependencies;
+import com.zeroc.icebuilderplugin.preferences.PluginPreferencePage;
 import com.zeroc.icebuilderplugin.util.StreamReader;
 
 public class Slice2JavaBuilder extends IncrementalProjectBuilder
@@ -71,8 +72,13 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
     protected IProject[] build(int kind, @SuppressWarnings("rawtypes")Map args, IProgressMonitor monitor)
         throws CoreException
     {
-        long start = System.currentTimeMillis();
+        // Ignore auto builds issued by Eclipse if Ice auto building is off
+        if((kind == AUTO_BUILD) && !Activator.getDefault().getPreferenceStore().getBoolean(PluginPreferencePage.REBUILD_AUTO))
+        {
+            return null;
+        }
 
+        long start = System.currentTimeMillis();
         IResourceDelta delta = getDelta(getProject());
         BuildState state = new BuildState(getProject(), delta, monitor);
         state.dependencies.read();
@@ -307,7 +313,7 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
         {
             cmd.add(p.next().getLocation().toOSString());
         }
-        
+
         if(err == null)
         {
             builder.redirectErrorStream(true);

@@ -195,6 +195,15 @@ public class Configuration
 
         fixGeneratedCP(null, getGeneratedDir());
 
+        if(!verifyIceHome(getIceHome()))
+        {
+            PluginPreferencePage.addIceHomeWarnings();
+        }
+        else
+        {
+            PluginPreferencePage.removeIceHomeWarnings();
+        }
+
         IJavaProject javaProject = JavaCore.create(_project);
         if(isAndroidProject())
         {
@@ -234,6 +243,8 @@ public class Configuration
         {
             generatedFolder.delete(true, null);
         }
+
+        PluginPreferencePage.removeIceHomeWarnings();
     }
     
     public String getJarName(String base)
