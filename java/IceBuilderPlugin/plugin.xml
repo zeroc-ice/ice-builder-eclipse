@@ -18,7 +18,6 @@
         id="com.zeroc.IceBuilderPlugin.marker.IceHomeProblemMarker"
         name="%marker.iceHomeProblem">
         <super type="org.eclipse.core.resources.problemmarker"/>
-        <persistent value="true"/>
     </extension>
     <extension
         id="com.zeroc.IceBuilderPlugin.Slice2JavaNature"

@@ -50,8 +50,7 @@ public class Slice2JavaNature implements IProjectNature
         _project.setDescription(desc, null);
         
         // Initialize a new configuration for this project.
-        Configuration config = new Configuration(_project);
-        config.initialize();
+        Configuration.getConfiguration(_project).initialize();
     }
 
     /*

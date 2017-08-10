@@ -11,33 +11,34 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ProjectScope;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 import com.zeroc.icebuilderplugin.Activator;
+import com.zeroc.icebuilderplugin.builder.Slice2JavaNature;
 import com.zeroc.icebuilderplugin.preferences.PluginPreferencePage;
 
 public class Configuration
 {
-    public Configuration(IProject project)
+    private Configuration(IProject project)
     {
         _project = project;
-
-        _instanceStore = new ScopedPreferenceStore(InstanceScope.INSTANCE, Activator.PLUGIN_ID + "." + _project.getName());
-
         _store = new ScopedPreferenceStore(new ProjectScope(project), Activator.PLUGIN_ID);
 
         // If the project contains old properties
@@ -113,12 +114,31 @@ public class Configuration
         setValue(EXTRA_ARGUMENTS_KEY, extraArguments);
         setValue(VERSION_KEY, "4.1");
 
-        try
+        PlatformUI.getWorkbench().getDisplay().syncExec(new Runnable()
         {
-            write();
+            public void run()
+            {
+                try
+                {
+                    write();
+                }
+                catch(IOException e) {}
+                catch(CoreException e) {}
+            }
+        });
+    }
+
+    public static Configuration getConfiguration(IProject project)
+    {
+        Configuration configuration = projectConfigurations.get(project);
+
+        if(configuration == null)
+        {
+            configuration = new Configuration(project);
+            projectConfigurations.put(project, configuration);
         }
-        catch(IOException e) {}
-        catch(CoreException e) {}
+
+        return configuration;
     }
 
     /**
@@ -198,19 +218,13 @@ public class Configuration
     public boolean write()
         throws CoreException, IOException
     {
-        boolean rc = false;
         if(_store.needsSaving())
         {
             _store.save();
-            rc = true;
-        }
-        if(_instanceStore.needsSaving())
-        {
-            _instanceStore.save();
-            rc = true;
+            return true;
         }
 
-        return rc;
+        return false;
     }
 
     public void initialize()
@@ -226,14 +240,7 @@ public class Configuration
 
         fixGeneratedCP(null, getGeneratedDir());
 
-        if(!verifyIceHome(getIceHome()))
-        {
-            PluginPreferencePage.addIceHomeWarnings();
-        }
-        else
-        {
-            PluginPreferencePage.removeIceHomeWarnings();
-        }
+        verifyIceHome(getIceHome());
     }
 
     public void deinstall()
@@ -246,7 +253,9 @@ public class Configuration
             generatedFolder.delete(true, null);
         }
 
-        PluginPreferencePage.removeIceHomeWarnings();
+        removeIceHomeWarnings();
+
+        projectConfigurations.remove(_project);
     }
 
     public String getGeneratedDir()
@@ -548,14 +557,58 @@ public class Configuration
         return getTranslatorForHome(getIceHome());
     }
 
-    static public boolean verifyIceHome(String dir)
+    public static boolean verifyIceHome(String dir)
     {
-        return getTranslatorForHome(dir) != null;
+        if(getTranslatorForHome(dir) != null)
+        {
+            removeIceHomeWarnings();
+            return true;
+        }
+
+        addIceHomeWarnings();
+        return false;
     }
 
-    private static String getIceHome()
+    public static String getIceHome()
     {
         return Activator.getDefault().getPreferenceStore().getString(PluginPreferencePage.ICE_HOME);
+    }
+
+    private static void addIceHomeWarnings()
+    {
+        for(IProject project :
+            ResourcesPlugin.getWorkspace().getRoot().getProjects(IProject.INCLUDE_HIDDEN))
+        {
+            try
+            {
+                if(project.hasNature(Slice2JavaNature.NATURE_ID) &&
+                        (project.findMarkers(ICE_HOME_PROBLEM, false, IProject.DEPTH_ZERO).length == 0))
+                {
+                    IMarker marker = project.createMarker(ICE_HOME_PROBLEM);
+                    marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
+                    marker.setAttribute(IMarker.PRIORITY, IMarker.PRIORITY_HIGH);
+                    marker.setAttribute(IMarker.LOCATION, "Ice Home");
+                    marker.setAttribute(IMarker.MESSAGE, "Cannot locate Slice2Java compiler");
+                }
+            }
+            catch(CoreException e) {} // Ignored
+        }
+    }
+
+    private static void removeIceHomeWarnings()
+    {
+        for(IProject project :
+            ResourcesPlugin.getWorkspace().getRoot().getProjects(IProject.INCLUDE_HIDDEN))
+        {
+            try
+            {
+                if(project.hasNature(Slice2JavaNature.NATURE_ID))
+                {
+                    project.deleteMarkers(ICE_HOME_PROBLEM, false, IProject.DEPTH_ZERO);
+                }
+            }
+            catch(CoreException e) {} // Ignored
+        }
     }
 
     // For some reason ScopedPreferenceStore.setValue(String, String)
@@ -658,18 +711,19 @@ public class Configuration
         return null;
     }
 
+    private static final Map<IProject, Configuration> projectConfigurations =
+            new HashMap<IProject, Configuration>();
+
     private static final String VERSION_KEY = "builderVersion";
     private static final String GENERATED_KEY = "generated";
     private static final String INCLUDES_KEY = "includes";
     private static final String EXTRA_ARGUMENTS_KEY = "extraArguments";
 
+    public static final String ICE_HOME_PROBLEM = "com.zeroc.IceBuilderPlugin.marker.IceHomeProblemMarker";
+
     // Preferences store for items which should go in SCM. This includes things
     // like build flags.
     private ScopedPreferenceStore _store;
-
-    // Preferences store per project items which should not go in SCM, such as
-    // the location of the Ice installation.
-    private ScopedPreferenceStore _instanceStore;
 
     private IProject _project;
 

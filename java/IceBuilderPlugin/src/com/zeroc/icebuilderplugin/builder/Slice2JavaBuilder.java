@@ -72,6 +72,14 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
     protected IProject[] build(int kind, @SuppressWarnings("rawtypes")Map args, IProgressMonitor monitor)
         throws CoreException
     {
+        PlatformUI.getWorkbench().getDisplay().syncExec(new Runnable()
+        {
+            public void run()
+            {
+                Configuration.verifyIceHome(Configuration.getIceHome());
+            }
+        });
+
         // Ignore auto builds issued by Eclipse if Ice auto building is off
         if((kind == AUTO_BUILD) && !Activator.getDefault().getPreferenceStore().getBoolean(PluginPreferencePage.BUILD_AUTO))
         {
@@ -139,7 +147,7 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
     {
         BuildState(IProject project, IResourceDelta delta, IProgressMonitor monitor) throws CoreException
         {
-            config = new Configuration(project);
+            config = Configuration.getConfiguration(project);
 
             initializeConsole();
             out = _consoleout;
@@ -310,8 +318,6 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
         }
 
         builder.directory(rootLocation.toFile());
-        Map<String, String> env = builder.environment();
-        Configuration.setupSharedLibraryPath(env);
 
         return runSliceCompiler(builder, state, depend, out, err);
     }

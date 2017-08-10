@@ -188,8 +188,7 @@ public class ProjectProperties extends PropertyPage
 
     private void loadPrefs()
     {
-        IProject project = getProject();
-        _config = new Configuration(project);
+        _config = Configuration.getConfiguration(getProject());
 
         _generatedDir.setText(_config.getGeneratedDir());
         for(Iterator<String> iter = _config.getBareIncludes().iterator(); iter.hasNext();)
