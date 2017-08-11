@@ -337,14 +337,17 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
     {
         try
         {
-            state.out.println("Running Slice2Java compiler:");
-            state.out.print("    ");
-            for(Iterator<String> p = builder.command().iterator(); p.hasNext();)
+            if(!depend)
             {
-                state.out.print(p.next());
-                state.out.print(" ");
+                state.out.println("Running Slice2Java compiler:");
+                state.out.print("    ");
+                for(Iterator<String> p = builder.command().iterator(); p.hasNext();)
+                {
+                    state.out.print(p.next());
+                    state.out.print(" ");
+                }
+                state.out.println("");
             }
-            state.out.println("");
 
             Process proc = builder.start();
 
@@ -358,26 +361,29 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
             outThread.join();
             errThread.join();
 
-            if(status != 0)
+            if(!depend)
             {
-                state.err.println("slice2java status: " + status);
-                if(!depend && !isXML(err))
+                if(status != 0)
                 {
-                    String reason = err.toString();
-                    int helpIndex = reason.lastIndexOf(System.lineSeparator() +
-                            "Options:" + System.lineSeparator());
-
-                    if(helpIndex > -1)
+                    state.err.println("slice2java status: " + status);
+                    if(!isXML(err))
                     {
-                        reason = reason.substring(0, helpIndex);
-                    }
+                        String reason = err.toString();
+                        int helpIndex = reason.lastIndexOf(System.lineSeparator() +
+                                "Options:" + System.lineSeparator());
 
-                    throw new RuntimeException(reason);
+                        if(helpIndex > -1)
+                        {
+                            reason = reason.substring(0, helpIndex);
+                        }
+
+                        throw new RuntimeException(reason);
+                    }
                 }
-            }
-            else
-            {
-                state.out.println("Slice2Java status: " + status);
+                else
+                {
+                    state.out.println("Slice2Java status: " + status);
+                }
             }
 
             return status;
@@ -423,7 +429,7 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
             }
         }
 
-        IMarker marker = source.createMarker(IMarker.PROBLEM);
+        IMarker marker = source.createMarker(Configuration.SLICE_PROBLEM);
         marker.setAttribute(IMarker.MESSAGE, msg);
         if(msg.toLowerCase().indexOf("warning:") >= 0)
         {
@@ -582,41 +588,43 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
         for(Iterator<IFile> p = candidates.iterator(); p.hasNext();)
         {
             IFile file = p.next();
-            file.deleteMarkers(IMarker.PROBLEM, true, IResource.DEPTH_INFINITE);
+            file.deleteMarkers(Configuration.SLICE_PROBLEM, true, IResource.DEPTH_INFINITE);
         }
 
         StringBuffer out = new StringBuffer();
         StringBuffer err = new StringBuffer();
 
-        // Do the build.
-        build(state, candidates, false, out, err);
-
-        out = mergeXmls(out, false);
-
-        // Refresh the generated subdirectory prior to processing the
-        // generated files list.
-        state.generated.refreshLocal(IResource.DEPTH_INFINITE, monitor);
-
-        // Parse the output.
-        Slice2JavaGeneratedParser parser = getGeneratedFiles(state, candidates, out, err);
-        for(Map.Entry<IFile, Slice2JavaGeneratedParser.Entry> entry : parser.output.entrySet())
+        try
         {
-            IFile source = entry.getKey();
+            // Do the build.
+            build(state, candidates, false, out, err);
+        }
+        finally
+        {
+            out = mergeXmls(out, false);
+    
+            // Refresh the generated subdirectory prior to processing the
+            // generated files list.
+            state.generated.refreshLocal(IResource.DEPTH_INFINITE, monitor);
 
-            Slice2JavaGeneratedParser.Entry outputEntry = entry.getValue();
-            Set<IFile> newGeneratedJavaFiles = outputEntry.files;
-
-            for(IFile f : newGeneratedJavaFiles)
+            // Parse the output.
+            Slice2JavaGeneratedParser parser = getGeneratedFiles(state, candidates, out, err);
+            for(Map.Entry<IFile, Slice2JavaGeneratedParser.Entry> entry : parser.output.entrySet())
             {
-                // Mark the resource as derived.
-                f.setDerived(true, null);
-            }
+                IFile source = entry.getKey();
 
-            if(!outputEntry.error)
-            {
-                depends.add(source);
-                if(state.out != null)
+                Slice2JavaGeneratedParser.Entry outputEntry = entry.getValue();
+                Set<IFile> newGeneratedJavaFiles = outputEntry.files;
+
+                for(IFile f : newGeneratedJavaFiles)
                 {
+                    // Mark the resource as derived.
+                    f.setDerived(true, null);
+                }
+
+                if(!outputEntry.error)
+                {
+                    depends.add(source);
                     if(newGeneratedJavaFiles.isEmpty())
                     {
                         state.out.println(source.getProjectRelativePath().toString() + ": No java files emitted.");
@@ -630,43 +638,40 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
                         }
                     }
                 }
-            }
-            else
-            {
-                state.dependencies.errorSliceFiles.add(source);
-                if(state.out != null)
+                else
                 {
+                    state.dependencies.errorSliceFiles.add(source);
                     state.out.println(source.getProjectRelativePath().toString() + ": Error.");
                 }
+
+                // Update the set of slice -> java dependencies.
+                state.dependencies.sliceJavaDependencies.put(source, newGeneratedJavaFiles);
+
+                // Create markers for each warning/error.
+                createMarkers(state, source, outputEntry.output);
             }
 
-            // Update the set of slice -> java dependencies.
-            state.dependencies.sliceJavaDependencies.put(source, newGeneratedJavaFiles);
-
-            // Create markers for each warning/error.
-            createMarkers(state, source, outputEntry.output);
-        }
-
-        // Update the slice->slice dependencies.
-        // Only update the dependencies for those files with no build problems.
-        if(!depends.isEmpty())
-        {
-            if(state.out != null)
+            // Update the slice->slice dependencies.
+            // Only update the dependencies for those files with no build problems.
+            if(!depends.isEmpty())
             {
-                state.out.println("Updating dependencies.");
-            }
-
-            err = new StringBuffer();
-            if(build(state, depends, true, out, err) == 0)
-            {
-                out = mergeXmls(out, true);
-                // Parse the new dependency set.
-                state.dependencies.updateDependencies(out.toString());
-            }
-            else if(state.err != null)
-            {
-                state.err.println("Dependencies not updated due to error.");
-                state.err.println(err.toString());
+                if(state.out != null)
+                {
+                    state.out.println("Updating dependencies.");
+                }
+    
+                err = new StringBuffer();
+                if(build(state, depends, true, out, err) == 0)
+                {
+                    out = mergeXmls(out, true);
+                    // Parse the new dependency set.
+                    state.dependencies.updateDependencies(out.toString());
+                }
+                else if(state.err != null)
+                {
+                    state.err.println("Dependencies not updated due to error.");
+                    state.err.println(err.toString());
+                }
             }
         }
     }
@@ -811,99 +816,105 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
             for(Iterator<IFile> p = candidates.iterator(); p.hasNext();)
             {
                 IFile file = p.next();
-                file.deleteMarkers(IMarker.PROBLEM, true, IResource.DEPTH_INFINITE);
+                file.deleteMarkers(Configuration.SLICE_PROBLEM, true, IResource.DEPTH_INFINITE);
             }
 
-            // Do the build.
-            build(state, candidates, false, out, err);
-            out = mergeXmls(out, false);
-
-            // Refresh the generated directory prior to processing the generated
-            // files list.
-            state.generated.refreshLocal(IResource.DEPTH_INFINITE, monitor);
-
-            // Parse the emitted XML file that describes what was produced by
-            // the build.
-            Slice2JavaGeneratedParser parser = getGeneratedFiles(state, candidates, out, err);
-            for(Map.Entry<IFile, Slice2JavaGeneratedParser.Entry> entry : parser.output.entrySet())
+            try
             {
-                IFile source = entry.getKey();
-
-                Slice2JavaGeneratedParser.Entry outputEntry = entry.getValue();
-
-                Set<IFile> newGeneratedJavaFiles = outputEntry.files;
-                for(IFile f : newGeneratedJavaFiles)
-                {
-                    // Mark the resource as derived.
-                    f.setDerived(true, null);
-                }
-
-                // If the build of the file didn't result in an error, add to
-                // the dependencies list. Otherwise, add to the error list.
-                if(!outputEntry.error)
-                {
-                    depends.add(source);
-                }
-                else
-                {
-                    state.out.println(source.getProjectRelativePath().toString() + ": Error.");
-                    state.dependencies.errorSliceFiles.add(source);
-                }
-
-                // Compute the set difference between the old set and new set
-                // of generated files. The difference should be added to the
-                // orphan candidate set.
-                Set<IFile> oldJavaFiles = state.dependencies.sliceJavaDependencies.get(source);
-                if(oldJavaFiles != null)
-                {
-                    // Compute the set difference.
-                    oldJavaFiles.removeAll(newGeneratedJavaFiles);
-                    if(oldJavaFiles.isEmpty())
-                    {
-                        state.out.println(source.getProjectRelativePath().toString() + ": No orphans.");
-                    }
-                    else
-                    {
-                        state.out.println(source.getProjectRelativePath().toString() + ": Orphans:");
-                        for(Iterator<IFile> q = oldJavaFiles.iterator(); q.hasNext();)
-                        {
-                            state.out.println("    " + q.next().getProjectRelativePath().toString());
-                        }
-                    }
-                    orphanCandidateSet.addAll(oldJavaFiles);
-                }
-
-                // Update the set of slice -> java dependencies.
-                state.dependencies.sliceJavaDependencies.put(source, newGeneratedJavaFiles);
-
-                // If the build resulted in an error, there will be no java source files.
-                if(!outputEntry.error)
-                {
-                    if(newGeneratedJavaFiles.isEmpty())
-                    {
-                        state.out.println(source.getProjectRelativePath().toString() + ": No java files emitted.");
-                    }
-                    else
-                    {
-                        state.out.println(source.getProjectRelativePath().toString() + ": Emitted:");
-                        for(Iterator<IFile> q = newGeneratedJavaFiles.iterator(); q.hasNext();)
-                        {
-                            state.out.println("    " + q.next().getProjectRelativePath().toString());
-                        }
-                    }
-                }
-
-                generatedJavaFiles.addAll(newGeneratedJavaFiles);
-
-                // Create markers for each warning/error.
-                createMarkers(state, source, outputEntry.output);
+                // Do the build.
+                build(state, candidates, false, out, err);
             }
-
-            // Do a set difference between the orphan candidate set
-            // and the complete set of generated java source files.
-            // Any remaining are complete orphans and should
-            // be removed.
-            orphanCandidateSet.removeAll(generatedJavaFiles);
+            finally
+            {
+                out = mergeXmls(out, false);
+    
+                // Refresh the generated directory prior to processing the generated
+                // files list.
+                state.generated.refreshLocal(IResource.DEPTH_INFINITE, monitor);
+    
+                // Parse the emitted XML file that describes what was produced by
+                // the build.
+                Slice2JavaGeneratedParser parser = getGeneratedFiles(state, candidates, out, err);
+                for(Map.Entry<IFile, Slice2JavaGeneratedParser.Entry> entry : parser.output.entrySet())
+                {
+                    IFile source = entry.getKey();
+    
+                    Slice2JavaGeneratedParser.Entry outputEntry = entry.getValue();
+    
+                    Set<IFile> newGeneratedJavaFiles = outputEntry.files;
+                    for(IFile f : newGeneratedJavaFiles)
+                    {
+                        // Mark the resource as derived.
+                        f.setDerived(true, null);
+                    }
+    
+                    // If the build of the file didn't result in an error, add to
+                    // the dependencies list. Otherwise, add to the error list.
+                    if(!outputEntry.error)
+                    {
+                        depends.add(source);
+                    }
+                    else
+                    {
+                        state.out.println(source.getProjectRelativePath().toString() + ": Error.");
+                        state.dependencies.errorSliceFiles.add(source);
+                    }
+    
+                    // Compute the set difference between the old set and new set
+                    // of generated files. The difference should be added to the
+                    // orphan candidate set.
+                    Set<IFile> oldJavaFiles = state.dependencies.sliceJavaDependencies.get(source);
+                    if(oldJavaFiles != null)
+                    {
+                        // Compute the set difference.
+                        oldJavaFiles.removeAll(newGeneratedJavaFiles);
+                        if(oldJavaFiles.isEmpty())
+                        {
+                            state.out.println(source.getProjectRelativePath().toString() + ": No orphans.");
+                        }
+                        else
+                        {
+                            state.out.println(source.getProjectRelativePath().toString() + ": Orphans:");
+                            for(Iterator<IFile> q = oldJavaFiles.iterator(); q.hasNext();)
+                            {
+                                state.out.println("    " + q.next().getProjectRelativePath().toString());
+                            }
+                        }
+                        orphanCandidateSet.addAll(oldJavaFiles);
+                    }
+    
+                    // Update the set of slice -> java dependencies.
+                    state.dependencies.sliceJavaDependencies.put(source, newGeneratedJavaFiles);
+    
+                    // If the build resulted in an error, there will be no java source files.
+                    if(!outputEntry.error)
+                    {
+                        if(newGeneratedJavaFiles.isEmpty())
+                        {
+                            state.out.println(source.getProjectRelativePath().toString() + ": No java files emitted.");
+                        }
+                        else
+                        {
+                            state.out.println(source.getProjectRelativePath().toString() + ": Emitted:");
+                            for(Iterator<IFile> q = newGeneratedJavaFiles.iterator(); q.hasNext();)
+                            {
+                                state.out.println("    " + q.next().getProjectRelativePath().toString());
+                            }
+                        }
+                    }
+    
+                    generatedJavaFiles.addAll(newGeneratedJavaFiles);
+    
+                    // Create markers for each warning/error.
+                    createMarkers(state, source, outputEntry.output);
+                }
+    
+                // Do a set difference between the orphan candidate set
+                // and the complete set of generated java source files.
+                // Any remaining are complete orphans and should
+                // be removed.
+                orphanCandidateSet.removeAll(generatedJavaFiles);
+            }
         }
 
         if(orphanCandidateSet.isEmpty())
@@ -1181,13 +1192,27 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
                 Matcher match = pattern.matcher(line);
                 if(match.find())
                 {
-                    String file = match.group(0);
-                    IFile source = parser._sources.get(new Path(file.substring(file.lastIndexOf('/'))));
-                    Slice2JavaGeneratedParser.Entry entry = parser.output.get(source);
-                    if(entry != null)
+                    String file = match.group(1);
+                    if(file.contains("/"))
                     {
-                        entry.output = line;
+                        file.substring(file.lastIndexOf('/'));
                     }
+
+                    IFile source = parser._sources.get(new Path(file));
+                    Slice2JavaGeneratedParser.Entry entry = parser.output.get(source);
+                    if(entry == null)
+                    {
+                        entry = new Slice2JavaGeneratedParser.Entry();
+                        parser.output.put(source, entry);
+                        entry.files = new HashSet<IFile>();
+                        entry.output = "";
+                    }
+                    else if(entry.output.length() > 0)
+                    {
+                        entry.output += '\n';
+                    }
+                    entry.output += line;
+                    entry.error = true;
                 }
             }
         }

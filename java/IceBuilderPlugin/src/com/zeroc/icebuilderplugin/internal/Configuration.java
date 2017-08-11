@@ -20,6 +20,7 @@ import java.util.StringTokenizer;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
@@ -253,7 +254,8 @@ public class Configuration
             generatedFolder.delete(true, null);
         }
 
-        _project.deleteMarkers(ICE_HOME_PROBLEM, false, IProject.DEPTH_ZERO);
+        _project.deleteMarkers(ICE_HOME_PROBLEM, false, IResource.DEPTH_INFINITE);
+        _project.deleteMarkers(SLICE_PROBLEM, false, IResource.DEPTH_INFINITE);
 
         projectConfigurations.remove(_project);
     }
@@ -582,7 +584,7 @@ public class Configuration
             try
             {
                 if(project.hasNature(Slice2JavaNature.NATURE_ID) &&
-                        (project.findMarkers(ICE_HOME_PROBLEM, false, IProject.DEPTH_ZERO).length == 0))
+                        (project.findMarkers(ICE_HOME_PROBLEM, false, IResource.DEPTH_ZERO).length == 0))
                 {
                     IMarker marker = project.createMarker(ICE_HOME_PROBLEM);
                     marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
@@ -602,7 +604,7 @@ public class Configuration
         {
             try
             {
-                project.deleteMarkers(ICE_HOME_PROBLEM, false, IProject.DEPTH_ZERO);
+                project.deleteMarkers(ICE_HOME_PROBLEM, false, IResource.DEPTH_ZERO);
             }
             catch(CoreException e) {} // Ignored
         }
@@ -717,6 +719,7 @@ public class Configuration
     private static final String EXTRA_ARGUMENTS_KEY = "extraArguments";
 
     public static final String ICE_HOME_PROBLEM = "com.zeroc.IceBuilderPlugin.marker.IceHomeProblemMarker";
+    public static final String SLICE_PROBLEM = "com.zeroc.IceBuilderPlugin.marker.SliceProblemMarker";
 
     // Preferences store for items which should go in SCM. This includes things
     // like build flags.
