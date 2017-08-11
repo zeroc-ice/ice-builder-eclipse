@@ -47,28 +47,29 @@
             objectClass="org.eclipse.core.resources.IProject">
             <menu
                 id="IceBuilderPlugin.menu1"
-                label="%menu.label.0">
+                label="%menu.label.1">
                 <separator
                     name="IceBuilderPlugin.separator1">
                 </separator>
             </menu>
             <visibility>
-                <and>
-                    <objectState
-                        name="projectNature"
-                        value="com.zeroc.IceBuilderPlugin.Slice2JavaNature">
-                    </objectState>
-                    <objectState
-                        name="projectNature"
-                        value="org.eclipse.jdt.core.javanature">
-                    </objectState>
-                </and>
+                <objectState
+                    name="projectNature"
+                    value="com.zeroc.IceBuilderPlugin.Slice2JavaNature">
+                </objectState>
             </visibility>
+            <action
+                class="com.zeroc.icebuilderplugin.builder.CompileSliceAction"
+                enablesFor="*"
+                id="com.zeroc.IceBuilderPlugin.compileSliceAction"
+                label="%action.compile"
+                menubarPath="IceBuilderPlugin.menu1/IceBuilderPlugin.separator1">
+            </action>
             <action
                 class="com.zeroc.icebuilderplugin.builder.ToggleNatureAction"
                 enablesFor="*"
                 id="com.zeroc.IceBuilderPlugin.removeNatureAction"
-                label="%action.label.0"
+                label="%action.label.1"
                 menubarPath="IceBuilderPlugin.menu1/IceBuilderPlugin.separator1">
             </action>
         </objectContribution>
@@ -78,7 +79,7 @@
             objectClass="org.eclipse.core.resources.IProject">
             <menu
                 id="IceBuilderPlugin.menu2"
-                label="%menu.label.1">
+                label="%menu.label.2">
                 <separator
                     name="IceBuilderPlugin.separator1">
                 </separator>
@@ -101,7 +102,7 @@
                 class="com.zeroc.icebuilderplugin.builder.ToggleNatureAction"
                 enablesFor="*"
                 id="IceBuilderPlugin.addNatureAction"
-                label="%action.label.1"
+                label="%action.label.2"
                 menubarPath="IceBuilderPlugin.menu2/IceBuilderPlugin.separator1">
             </action>
         </objectContribution>

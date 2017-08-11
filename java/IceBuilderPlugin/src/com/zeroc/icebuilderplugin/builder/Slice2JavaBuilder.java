@@ -602,7 +602,7 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
         finally
         {
             out = mergeXmls(out, false);
-    
+
             // Refresh the generated subdirectory prior to processing the
             // generated files list.
             state.generated.refreshLocal(IResource.DEPTH_INFINITE, monitor);
@@ -659,7 +659,7 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
                 {
                     state.out.println("Updating dependencies.");
                 }
-    
+
                 err = new StringBuffer();
                 if(build(state, depends, true, out, err) == 0)
                 {
@@ -827,27 +827,27 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
             finally
             {
                 out = mergeXmls(out, false);
-    
+
                 // Refresh the generated directory prior to processing the generated
                 // files list.
                 state.generated.refreshLocal(IResource.DEPTH_INFINITE, monitor);
-    
+
                 // Parse the emitted XML file that describes what was produced by
                 // the build.
                 Slice2JavaGeneratedParser parser = getGeneratedFiles(state, candidates, out, err);
                 for(Map.Entry<IFile, Slice2JavaGeneratedParser.Entry> entry : parser.output.entrySet())
                 {
                     IFile source = entry.getKey();
-    
+
                     Slice2JavaGeneratedParser.Entry outputEntry = entry.getValue();
-    
+
                     Set<IFile> newGeneratedJavaFiles = outputEntry.files;
                     for(IFile f : newGeneratedJavaFiles)
                     {
                         // Mark the resource as derived.
                         f.setDerived(true, null);
                     }
-    
+
                     // If the build of the file didn't result in an error, add to
                     // the dependencies list. Otherwise, add to the error list.
                     if(!outputEntry.error)
@@ -859,7 +859,7 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
                         state.out.println(source.getProjectRelativePath().toString() + ": Error.");
                         state.dependencies.errorSliceFiles.add(source);
                     }
-    
+
                     // Compute the set difference between the old set and new set
                     // of generated files. The difference should be added to the
                     // orphan candidate set.
@@ -882,10 +882,10 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
                         }
                         orphanCandidateSet.addAll(oldJavaFiles);
                     }
-    
+
                     // Update the set of slice -> java dependencies.
                     state.dependencies.sliceJavaDependencies.put(source, newGeneratedJavaFiles);
-    
+
                     // If the build resulted in an error, there will be no java source files.
                     if(!outputEntry.error)
                     {
@@ -902,13 +902,13 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
                             }
                         }
                     }
-    
+
                     generatedJavaFiles.addAll(newGeneratedJavaFiles);
-    
+
                     // Create markers for each warning/error.
                     createMarkers(state, source, outputEntry.output);
                 }
-    
+
                 // Do a set difference between the orphan candidate set
                 // and the complete set of generated java source files.
                 // Any remaining are complete orphans and should

@@ -61,7 +61,7 @@ public class ToggleNatureAction implements IObjectActionDelegate
      */
     public void selectionChanged(IAction action, ISelection selection)
     {
-        this._selection = selection;
+        _selection = selection;
         //action.setEnabled(false);
     }
 
