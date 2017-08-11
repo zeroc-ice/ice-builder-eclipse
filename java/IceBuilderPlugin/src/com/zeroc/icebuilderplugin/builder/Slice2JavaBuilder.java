@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -101,16 +103,35 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
             {
                 incrementalBuild(state, monitor);
             }
-        }
-        finally
-        {
+
             long end = System.currentTimeMillis();
-            if(state.out != null)
-            {
-                state.out.println("Build complete. Elapsed time: " + (end - start) / 1000 + "s.");
-            }
+            state.out.println("Build complete. Elapsed time: " + (end - start) / 1000 + "s.\n");
             state.dependencies.write();
         }
+        catch(CoreException e)
+        {
+            long end = System.currentTimeMillis();
+            state.dependencies.write();
+
+            // Handle only exceptions thrown by the Slice compiler
+            if(e.getStatus().getPlugin().equals(Activator.PLUGIN_ID))
+            {
+                if(state.err != null)
+                {
+                    state.err.println("Build failed. Elapsed time: " + (end - start) / 1000 + "s.");
+                    state.err.println("    Reason: " + e.getStatus().getMessage());
+                }
+                else
+                {
+                    e.printStackTrace(System.err);
+                }
+            }
+            else
+            {
+                throw e;
+            }
+        }
+
         return null;
     }
 
@@ -238,7 +259,7 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
         {
             if(_consoleout == null)
             {
-                MessageConsole console = new MessageConsole("slice2java", null);
+                MessageConsole console = new MessageConsole("Slice2Java Compiler", null);
                 IConsole[] ics = new IConsole[1];
                 ics[0] = console;
                 IConsoleManager csmg = ConsolePlugin.getDefault().getConsoleManager();
@@ -275,18 +296,16 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
     private int build(BuildState state, Set<IFile> files, boolean depend, StringBuffer out, StringBuffer err)
         throws CoreException
     {
-        // Clear the output buffer.
+        // Clear the output buffer
         out.setLength(0);
-        if(err != null)
-        {
-            err.setLength(0);
-        }
+        // Clear the error buffer
+        err.setLength(0);
 
         List<String> cmd = new LinkedList<String>();
         String translator = state.config.getTranslator();
         if(translator == null)
         {
-            throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Cannot locate slice2java translator: please fix Ice install location", null));
+            throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Cannot locate slice2java compiler", null));
         }
 
         cmd.add(translator);
@@ -299,24 +318,14 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
             cmd.add("--output-dir=" + state.generated.getProjectRelativePath().toString());
             cmd.add("--list-generated");
         }
-        List<String> cmdBase = new LinkedList<String>();
-        cmdBase.addAll(cmd);
-
         cmd.addAll(state.config.getCommandLine());
-
-        ProcessBuilder builder = new ProcessBuilder(cmd);
-        IPath rootLocation = getProject().getLocation();
-
         for(Iterator<IFile> p = files.iterator(); p.hasNext();)
         {
             cmd.add(p.next().getLocation().toOSString());
         }
 
-        if(err == null)
-        {
-            builder.redirectErrorStream(true);
-        }
-
+        ProcessBuilder builder = new ProcessBuilder(cmd);
+        IPath rootLocation = getProject().getLocation();
         builder.directory(rootLocation.toFile());
 
         return runSliceCompiler(builder, state, depend, out, err);
@@ -328,56 +337,54 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
     {
         try
         {
-            if(state.out != null)
+            state.out.println("Running Slice2Java compiler:");
+            state.out.print("    ");
+            for(Iterator<String> p = builder.command().iterator(); p.hasNext();)
             {
-                for(Iterator<String> p = builder.command().iterator(); p.hasNext();)
-                {
-                    state.out.print(p.next());
-                    state.out.print(" ");
-                }
-                state.out.println("");
+                state.out.print(p.next());
+                state.out.print(" ");
             }
+            state.out.println("");
 
             Process proc = builder.start();
 
             StreamReader outThread = new StreamReader(proc.getInputStream(), out);
             outThread.start();
-            StreamReader errThread = null;
-            if(err != null)
-            {
-                errThread = new StreamReader(proc.getErrorStream(), err);
-                errThread.start();
-            }
+            StreamReader errThread = new StreamReader(proc.getErrorStream(), err);
+            errThread.start();
 
             int status = proc.waitFor();
 
             outThread.join();
-            if(errThread != null)
-            {
-                errThread.join();
-            }
+            errThread.join();
 
             if(status != 0)
             {
-                if(state.err != null)
+                state.err.println("slice2java status: " + status);
+                if(!depend && !isXML(err))
                 {
-                    state.err.println("slice2java status: " + status);
-                }
-                if(!depend)
-                {
-                    StringBuffer reason = err == null ? out : err;
-                    if(!isXML(reason))
+                    String reason = err.toString();
+                    int helpIndex = reason.lastIndexOf(System.lineSeparator() +
+                            "Options:" + System.lineSeparator());
+
+                    if(helpIndex > -1)
                     {
-                        throw new RuntimeException(reason.toString());
+                        reason = reason.substring(0, helpIndex);
                     }
+
+                    throw new RuntimeException(reason);
                 }
+            }
+            else
+            {
+                state.out.println("Slice2Java status: " + status);
             }
 
             return status;
         }
         catch(Exception e)
         {
-            throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.toString(), null));
+            throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
         }
     }
 
@@ -558,21 +565,16 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
             return;
         }
 
-        if(state.out != null)
+        java.util.Date date = new java.util.Date();
+        state.out.println("Started full build at " + new SimpleDateFormat("HH:mm:ss").format(date));
+
+        state.out.println("Candidate list:");
+        // This is a complete list of Slice files.
+        for(Iterator<IFile> p = candidates.iterator(); p.hasNext();)
         {
-            java.util.Date date = new java.util.Date();
-            state.out.println("Start full build at " + new SimpleDateFormat("HH:mm:ss").format(date));
-
-            state.out.println("Candidate list:");
-            // This is a complete list of Slice files.
-            for(Iterator<IFile> p = candidates.iterator(); p.hasNext();)
-            {
-                state.out.println("    " + p.next().getProjectRelativePath().toString());
-            }
-            state.out.println("Regenerating java source files.");
+            state.out.println("    " + p.next().getProjectRelativePath().toString());
         }
-
-        StringBuffer out = new StringBuffer();
+        state.out.println("Regenerating java source files.");
 
         Set<IFile> depends = new HashSet<IFile>();
 
@@ -583,8 +585,11 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
             file.deleteMarkers(IMarker.PROBLEM, true, IResource.DEPTH_INFINITE);
         }
 
+        StringBuffer out = new StringBuffer();
+        StringBuffer err = new StringBuffer();
+
         // Do the build.
-        build(state, candidates, false, out, null);
+        build(state, candidates, false, out, err);
 
         out = mergeXmls(out, false);
 
@@ -593,7 +598,7 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
         state.generated.refreshLocal(IResource.DEPTH_INFINITE, monitor);
 
         // Parse the output.
-        Slice2JavaGeneratedParser parser = getGeneratedFiles(state, candidates, out);
+        Slice2JavaGeneratedParser parser = getGeneratedFiles(state, candidates, out, err);
         for(Map.Entry<IFile, Slice2JavaGeneratedParser.Entry> entry : parser.output.entrySet())
         {
             IFile source = entry.getKey();
@@ -651,7 +656,7 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
                 state.out.println("Updating dependencies.");
             }
 
-            StringBuffer err = new StringBuffer();
+            err = new StringBuffer();
             if(build(state, depends, true, out, err) == 0)
             {
                 out = mergeXmls(out, true);
@@ -672,21 +677,18 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
         Set<IFile> candidates = state.deltas();
         List<IFile> removed = state.removed();
 
-        if(state.out != null)
-        {
-            java.util.Date date = new java.util.Date();
-            state.out.println("Start incremental build at " + new SimpleDateFormat("HH:mm:ss").format(date));
+        java.util.Date date = new java.util.Date();
+        state.out.println("Started incremental build at " + new SimpleDateFormat("HH:mm:ss").format(date));
 
-            state.out.println("Candidate list:");
-            // This is a complete list of slice files.
-            for(Iterator<IFile> p = candidates.iterator(); p.hasNext();)
-            {
-                state.out.println("   + " + p.next().getProjectRelativePath().toString());
-            }
-            for(Iterator<IFile> p = removed.iterator(); p.hasNext();)
-            {
-                state.out.println("   - " + p.next().getProjectRelativePath().toString());
-            }
+        state.out.println("Candidate list:");
+        // This is a complete list of slice files.
+        for(Iterator<IFile> p = candidates.iterator(); p.hasNext();)
+        {
+            state.out.println("   + " + p.next().getProjectRelativePath().toString());
+        }
+        for(Iterator<IFile> p = removed.iterator(); p.hasNext();)
+        {
+            state.out.println("   - " + p.next().getProjectRelativePath().toString());
         }
 
         // The orphan candidate set.
@@ -719,19 +721,16 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
             }
 
             Set<IFile> oldJavaFiles = state.dependencies.sliceJavaDependencies.remove(f);
-            if(state.out != null)
+            if(oldJavaFiles == null || oldJavaFiles.isEmpty())
             {
-                if(oldJavaFiles == null || oldJavaFiles.isEmpty())
+                state.out.println(f.getProjectRelativePath().toString() + ": No orphans.");
+            }
+            else
+            {
+                state.out.println(f.getProjectRelativePath().toString() + ": Orphans:");
+                for(Iterator<IFile> q = oldJavaFiles.iterator(); q.hasNext();)
                 {
-                    state.out.println(f.getProjectRelativePath().toString() + ": No orphans.");
-                }
-                else
-                {
-                    state.out.println(f.getProjectRelativePath().toString() + ": Orphans:");
-                    for(Iterator<IFile> q = oldJavaFiles.iterator(); q.hasNext();)
-                    {
-                        state.out.println("    " + q.next().getProjectRelativePath().toString());
-                    }
+                    state.out.println("    " + q.next().getProjectRelativePath().toString());
                 }
             }
 
@@ -781,34 +780,29 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
         // Remove all the removed files from the candidates list.
         candidates.removeAll(removed);
 
-        if(state.out != null)
+        if(candidates.isEmpty())
         {
-            if(candidates.isEmpty())
+            state.out.println("No remaining candidates.");
+        }
+        else
+        {
+            state.out.println("Expanded candidate list:");
+            // This is a complete list of slice files.
+            for(Iterator<IFile> p = candidates.iterator(); p.hasNext();)
             {
-                state.out.println("No remaining candidates.");
-            }
-            else
-            {
-                state.out.println("Expanded candidate list:");
-                // This is a complete list of slice files.
-                for(Iterator<IFile> p = candidates.iterator(); p.hasNext();)
-                {
-                    state.out.println("    " + p.next().getProjectRelativePath().toString());
-                }
+                state.out.println("    " + p.next().getProjectRelativePath().toString());
             }
         }
-
-        StringBuffer out = new StringBuffer();
 
         // The set of files that we'll generate dependencies for.
         Set<IFile> depends = new HashSet<IFile>();
 
+        StringBuffer out = new StringBuffer();
+        StringBuffer err = new StringBuffer();
+
         if(!candidates.isEmpty())
         {
-            if(state.out != null)
-            {
-                state.out.println("Regenerating java source files.");
-            }
+            state.out.println("Regenerating java source files.");
 
             // The complete set of generated java files by this build.
             Set<IFile> generatedJavaFiles = new HashSet<IFile>();
@@ -821,7 +815,7 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
             }
 
             // Do the build.
-            build(state, candidates, false, out, null);
+            build(state, candidates, false, out, err);
             out = mergeXmls(out, false);
 
             // Refresh the generated directory prior to processing the generated
@@ -830,7 +824,7 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
 
             // Parse the emitted XML file that describes what was produced by
             // the build.
-            Slice2JavaGeneratedParser parser = getGeneratedFiles(state, candidates, out);
+            Slice2JavaGeneratedParser parser = getGeneratedFiles(state, candidates, out, err);
             for(Map.Entry<IFile, Slice2JavaGeneratedParser.Entry> entry : parser.output.entrySet())
             {
                 IFile source = entry.getKey();
@@ -852,10 +846,7 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
                 }
                 else
                 {
-                    if(state.out != null)
-                    {
-                        state.out.println(source.getProjectRelativePath().toString() + ": Error.");
-                    }
+                    state.out.println(source.getProjectRelativePath().toString() + ": Error.");
                     state.dependencies.errorSliceFiles.add(source);
                 }
 
@@ -867,19 +858,16 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
                 {
                     // Compute the set difference.
                     oldJavaFiles.removeAll(newGeneratedJavaFiles);
-                    if(state.out != null)
+                    if(oldJavaFiles.isEmpty())
                     {
-                        if(oldJavaFiles.isEmpty())
+                        state.out.println(source.getProjectRelativePath().toString() + ": No orphans.");
+                    }
+                    else
+                    {
+                        state.out.println(source.getProjectRelativePath().toString() + ": Orphans:");
+                        for(Iterator<IFile> q = oldJavaFiles.iterator(); q.hasNext();)
                         {
-                            state.out.println(source.getProjectRelativePath().toString() + ": No orphans.");
-                        }
-                        else
-                        {
-                            state.out.println(source.getProjectRelativePath().toString() + ": Orphans:");
-                            for(Iterator<IFile> q = oldJavaFiles.iterator(); q.hasNext();)
-                            {
-                                state.out.println("    " + q.next().getProjectRelativePath().toString());
-                            }
+                            state.out.println("    " + q.next().getProjectRelativePath().toString());
                         }
                     }
                     orphanCandidateSet.addAll(oldJavaFiles);
@@ -889,7 +877,7 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
                 state.dependencies.sliceJavaDependencies.put(source, newGeneratedJavaFiles);
 
                 // If the build resulted in an error, there will be no java source files.
-                if(state.out != null && !outputEntry.error)
+                if(!outputEntry.error)
                 {
                     if(newGeneratedJavaFiles.isEmpty())
                     {
@@ -918,19 +906,16 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
             orphanCandidateSet.removeAll(generatedJavaFiles);
         }
 
-        if(state.out != null)
+        if(orphanCandidateSet.isEmpty())
         {
-            if(orphanCandidateSet.isEmpty())
+            state.out.println("No orphans from this build.");
+        }
+        else
+        {
+            state.out.println("Orphans from this build:");
+            for(Iterator<IFile> p = orphanCandidateSet.iterator(); p.hasNext();)
             {
-                state.out.println("No orphans from this build.");
-            }
-            else
-            {
-                state.out.println("Orphans from this build:");
-                for(Iterator<IFile> p = orphanCandidateSet.iterator(); p.hasNext();)
-                {
-                    state.out.println("    " + p.next().getProjectRelativePath().toString());
-                }
+                state.out.println("    " + p.next().getProjectRelativePath().toString());
             }
         }
 
@@ -945,12 +930,9 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
         // The dependencies of any files without build errors should be updated.
         if(!depends.isEmpty())
         {
-            if(state.out != null)
-            {
-                state.out.println("Updating dependencies.");
-            }
+            state.out.println("Updating dependencies.");
 
-            StringBuffer err = new StringBuffer();
+            err = new StringBuffer();
 
             // We've already added markers for any errors... Only update the
             // dependencies if no problems resulted in the build.
@@ -960,7 +942,7 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
                 // Parse the new dependency set.
                 state.dependencies.updateDependencies(out.toString());
             }
-            else if(state.err != null)
+            else
             {
                 state.err.println("Dependencies not updated due to error.");
                 state.err.println(err.toString());
@@ -1050,7 +1032,7 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
         private IFolder _generated;
         private IPath _generatedPath;
         // Map of absolute path to project location.
-        private Map<IPath, IFile> _sources = new HashMap<IPath, IFile>();
+        Map<IPath, IFile> _sources = new HashMap<IPath, IFile>();
 
         Slice2JavaGeneratedParser(IFolder generated, Set<IFile> candidates)
         {
@@ -1084,7 +1066,7 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
             return _generated.getFile(p.removeFirstSegments(match));
         }
 
-        public Set<IFile> visitSource(Node source) throws SAXException
+        private Set<IFile> visitSource(Node source) throws SAXException
         {
             Set<IFile> files = new HashSet<IFile>();
             NodeList sourceNodes = source.getChildNodes();
@@ -1136,22 +1118,25 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
                         throw new SAXException("unknown source file: " + name);
                     }
 
-                    Entry e = new Entry();
-                    e.error = true;
-                    e.output = getText(findNode(sourceElement, "output"));
-
-                    String error = sourceElement.getAttribute("error");
-                    if(error.equals("true"))
+                    Entry entry = new Entry();
+                    entry.error = true;
+                    entry.output = "";
+                    try
                     {
-                        e.error = true;
-                        e.files = new HashSet<IFile>();
+                        entry.output = getText(findNode(sourceElement, "output"));
+                    }
+                    catch(SAXException e) {} // Ignored
+
+                    if(sourceElement.getAttribute("error").equals("true"))
+                    {
+                        entry.files = new HashSet<IFile>();
                     }
                     else
                     {
-                        e.error = false;
-                        e.files = visitSource(sourceElement);
+                        entry.error = false;
+                        entry.files = visitSource(sourceElement);
                     }
-                    output.put(source, e);
+                    output.put(source, entry);
                 }
             }
         }
@@ -1177,10 +1162,10 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
         {
             return false;
         }
-        return true;  
+        return true;
     }
 
-    private Slice2JavaGeneratedParser getGeneratedFiles(BuildState state, Set<IFile> candidates, StringBuffer out)
+    private Slice2JavaGeneratedParser getGeneratedFiles(BuildState state, Set<IFile> candidates, StringBuffer out, StringBuffer err)
         throws CoreException
     {
         Slice2JavaGeneratedParser parser = new Slice2JavaGeneratedParser(state.generated, candidates);
@@ -1189,6 +1174,22 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
             InputStream in = new ByteArrayInputStream(out.toString().getBytes());
             Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new BufferedInputStream(in));
             parser.visit(doc);
+
+            Pattern pattern = Pattern.compile("(.*):[0-9]+:\\s(.*)");
+            for(String line : err.toString().split("\\r?\\n"))
+            {
+                Matcher match = pattern.matcher(line);
+                if(match.find())
+                {
+                    String file = match.group(0);
+                    IFile source = parser._sources.get(new Path(file.substring(file.lastIndexOf('/'))));
+                    Slice2JavaGeneratedParser.Entry entry = parser.output.get(source);
+                    if(entry != null)
+                    {
+                        entry.output = line;
+                    }
+                }
+            }
         }
         catch(SAXException e)
         {

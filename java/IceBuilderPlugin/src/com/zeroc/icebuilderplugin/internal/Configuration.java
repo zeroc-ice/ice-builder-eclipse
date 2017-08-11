@@ -253,7 +253,7 @@ public class Configuration
             generatedFolder.delete(true, null);
         }
 
-        removeIceHomeWarnings();
+        _project.deleteMarkers(ICE_HOME_PROBLEM, false, IProject.DEPTH_ZERO);
 
         projectConfigurations.remove(_project);
     }
@@ -364,7 +364,7 @@ public class Configuration
         StringTokenizer tokens = new StringTokenizer(getExtraArguments());
         while(tokens.hasMoreTokens())
         {  
-            cmds.add(tokens.nextToken());  
+            cmds.add(tokens.nextToken().trim());
         }
 
         return cmds;
@@ -602,10 +602,7 @@ public class Configuration
         {
             try
             {
-                if(project.hasNature(Slice2JavaNature.NATURE_ID))
-                {
-                    project.deleteMarkers(ICE_HOME_PROBLEM, false, IProject.DEPTH_ZERO);
-                }
+                project.deleteMarkers(ICE_HOME_PROBLEM, false, IProject.DEPTH_ZERO);
             }
             catch(CoreException e) {} // Ignored
         }
