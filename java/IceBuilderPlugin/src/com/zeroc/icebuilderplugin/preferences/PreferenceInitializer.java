@@ -79,7 +79,10 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer
                     }
                 }
             }
-        } catch(Exception e){} // Ignored
+        } catch(Exception e)
+        {
+            // Ignored
+        }
 
         return "";
     }
@@ -109,7 +112,10 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer
 
             return out.toString().split("    ")[3].trim();
         }
-        catch(Exception e){} // Ignored
+        catch(Exception e)
+        {
+            // Ignored
+        }
 
         return null;
     }

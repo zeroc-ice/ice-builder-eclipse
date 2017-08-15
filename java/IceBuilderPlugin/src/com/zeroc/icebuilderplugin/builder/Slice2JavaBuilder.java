@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -119,7 +119,7 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
                 if(state.err != null)
                 {
                     state.err.println("Build failed. Elapsed time: " + (end - start) / 1000 + "s.");
-                    state.err.println("    Reason: " + e.getStatus().getMessage());
+                    state.err.println("    Reason: " + e.getStatus().getMessage() + "\n");
                 }
                 else
                 {
@@ -301,14 +301,14 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
         // Clear the error buffer
         err.setLength(0);
 
-        List<String> cmd = new LinkedList<String>();
-        String translator = state.config.getTranslator();
-        if(translator == null)
+        Set<String> cmd = new LinkedHashSet<String>();
+        String compiler = state.config.getCompiler();
+        if(compiler == null)
         {
             throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Cannot locate slice2java compiler", null));
         }
 
-        cmd.add(translator);
+        cmd.add(compiler);
         if(depend)
         {
             cmd.add("--depend-xml");
@@ -324,7 +324,7 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
             cmd.add(p.next().getLocation().toOSString());
         }
 
-        ProcessBuilder builder = new ProcessBuilder(cmd);
+        ProcessBuilder builder = new ProcessBuilder(cmd.toArray(new String[] {}));
         IPath rootLocation = getProject().getLocation();
         builder.directory(rootLocation.toFile());
 
@@ -601,8 +601,7 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
         }
         finally
         {
-            out = mergeXmls(out, false);
-
+            out = mergeXmls(state, out, false);
             // Refresh the generated subdirectory prior to processing the
             // generated files list.
             state.generated.refreshLocal(IResource.DEPTH_INFINITE, monitor);
@@ -663,7 +662,7 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
                 err = new StringBuffer();
                 if(build(state, depends, true, out, err) == 0)
                 {
-                    out = mergeXmls(out, true);
+                    out = mergeXmls(state, out, true);
                     // Parse the new dependency set.
                     state.dependencies.updateDependencies(out.toString());
                 }
@@ -826,8 +825,7 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
             }
             finally
             {
-                out = mergeXmls(out, false);
-
+                out = mergeXmls(state, out, false);
                 // Refresh the generated directory prior to processing the generated
                 // files list.
                 state.generated.refreshLocal(IResource.DEPTH_INFINITE, monitor);
@@ -949,7 +947,7 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
             // dependencies if no problems resulted in the build.
             if(build(state, depends, true, out, err) == 0)
             {
-                out = mergeXmls(out, true);
+                out = mergeXmls(state, out, true);
                 // Parse the new dependency set.
                 state.dependencies.updateDependencies(out.toString());
             }
@@ -962,27 +960,34 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
     }
 
     //
-    // This method merge the XML produced by multiple Slice translator
+    // This method merge the XML produced by multiple Slice compiler
     // invocations in a single XML. If depend argument is true, the input
     // buffer is treated as a dependencies XML, otherwise is treated as
     // a generated list XML.
     //
     private StringBuffer
-    mergeXmls(StringBuffer input, boolean depend)
+    mergeXmls(BuildState state, StringBuffer input, boolean depend)
     {
         //
         // Merge depend XMLs in a single XML
         //
         String v = input.toString();
         StringTokenizer lines = new StringTokenizer(v, System.getProperty("line.separator"));
-        boolean firstLine = true;
-        boolean firstGenerated = true;
-        StringBuffer out = new StringBuffer();
+        boolean onXML = false;
+        StringBuffer out = new StringBuffer("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+        if(depend)
+        {
+            out.append("<dependencies>\n");
+        }
+        else
+        {
+            out.append("<generated>\n");
+        }
+
         while(lines.hasMoreTokens())
         {
             String line = lines.nextToken();
-            if(line.startsWith("<?xml version=\"1.0\" encoding=\"UTF-8\"?>") &&
-            !firstLine)
+            if(line.equals("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"))
             {
                 continue;
             }
@@ -991,17 +996,12 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
             {
                 if(line.equals("<dependencies>"))
                 {
-                    if(firstGenerated)
-                    {
-                        firstGenerated = false;
-                    }
-                    else
-                    {
-                        continue;
-                    }
+                    onXML = true;
+                    continue;
                 }
-                else if(line.equals("</dependencies>") && lines.hasMoreTokens())
+                else if(line.equals("</dependencies>"))
                 {
+                    onXML = false;
                     continue;
                 }
             }
@@ -1009,24 +1009,35 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
             {
                 if(line.equals("<generated>"))
                 {
-                    if(firstGenerated)
-                    {
-                        firstGenerated = false;
-                    }
-                    else
-                    {
-                        continue;
-                    }
+                    onXML = true;
+                    continue;
                 }
-                else if(line.equals("</generated>") && lines.hasMoreTokens())
+                else if(line.equals("</generated>"))
                 {
+                    onXML = false;
                     continue;
                 }
             }
 
-            out.append(line + "\n");
-            firstLine = false;
+            if(onXML)
+            {
+                out.append(line + '\n');
+            }
+            else
+            {
+                state.out.println(line);
+            }
         }
+
+        if(depend)
+        {
+            out.append("</dependencies>\n");
+        }
+        else
+        {
+            out.append("</generated>\n");
+        }
+
         return out;
     }
 
@@ -1136,7 +1147,10 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
                     {
                         entry.output = getText(findNode(sourceElement, "output"));
                     }
-                    catch(SAXException e) {} // Ignored
+                    catch(SAXException e)
+                    {
+                        // Ignored
+                    }
 
                     if(sourceElement.getAttribute("error").equals("true"))
                     {
@@ -1182,9 +1196,12 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
         Slice2JavaGeneratedParser parser = new Slice2JavaGeneratedParser(state.generated, candidates);
         try
         {
-            InputStream in = new ByteArrayInputStream(out.toString().getBytes());
-            Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new BufferedInputStream(in));
-            parser.visit(doc);
+            if(out.length() > 0)
+            {
+                InputStream in = new ByteArrayInputStream(out.toString().getBytes());
+                Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new BufferedInputStream(in));
+                parser.visit(doc);
+            }
 
             Pattern pattern = Pattern.compile("(.*):[0-9]+:\\s(.*)");
             for(String line : err.toString().split("\\r?\\n"))
@@ -1213,6 +1230,10 @@ public class Slice2JavaBuilder extends IncrementalProjectBuilder
                     }
                     entry.output += line;
                     entry.error = true;
+                }
+                else
+                {
+                    state.err.println(line);
                 }
             }
         }

@@ -223,7 +223,7 @@ public abstract class PropertyPage extends org.eclipse.ui.dialogs.PropertyPage
         Link l = new Link(composite, SWT.WRAP);
         l.setText("");
         l.setText("For a list of all the supported Slice2Java compiler options consult the "
-                 +"<a>documentation</a>.");
+                 +"<a>Ice Manual</a>.");
         l.addSelectionListener(new SelectionListener()
         {
             @Override
@@ -233,7 +233,10 @@ public abstract class PropertyPage extends org.eclipse.ui.dialogs.PropertyPage
                     PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL(
                             "https://doc.zeroc.com/display/Ice/slice2java+Command-Line+Options"));
                 }
-                catch(Exception e) {} // Ignored
+                catch(Exception e)
+                {
+                    // Ignored
+                }
             }
 
             @Override

@@ -6,6 +6,42 @@ This file describes the change history for the Ice Builder for Eclipse
 plug-in.
 
 ======================================================================
+Changes since version 4.0.0.20150721
+======================================================================
+
+- Removed intrusive error popups, now all errors are printed directly
+  to the console.
+
+- Added support for parsing compiler output in Ice 3.7.0
+
+- Added a preference to control whether or not Slice files should
+  be automatically compiled by eclipse as changes are saved.
+
+- Added new problem markers specifically for Ice related errors.
+
+- Now all Slice files within a project are compiled, instead of only
+  those inside specially designated Slice source folders.
+
+- Added a button in the "Ice Builder" menu for manually compiling
+  Slice files.
+
+- Removed the ability to set compiler options for individual Slice
+  files.
+
+- Removed checkboxes for automatically including Ice jar files, as
+  they are no longer shipped with Ice installations.
+
+- Simplified the project properties UI.
+
+- Fixed a bug where the Ice Builder could be added to non-java
+  Eclipse projects.
+
+- Fixed a bug where errors in Slice files weren't highlighted.
+
+- Fixed a bug where incomplete checksum maps could be generated.
+
+
+======================================================================
 Changes since version 3.5.1.20131004
 ======================================================================
 

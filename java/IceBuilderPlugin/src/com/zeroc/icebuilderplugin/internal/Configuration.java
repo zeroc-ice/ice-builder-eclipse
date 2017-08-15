@@ -123,8 +123,14 @@ public class Configuration
                 {
                     write();
                 }
-                catch(IOException e) {}
-                catch(CoreException e) {}
+                catch(IOException e)
+                {
+                    // Ignored
+                }
+                catch(CoreException e)
+                {
+                    // Ignored
+                }
             }
         });
     }
@@ -490,7 +496,7 @@ public class Configuration
             //
             // No need to change the PATH environment variable on Windows, the
             // DLLs should be found
-            // in the translator local directory.
+            // in the compiler local directory.
             //
             // ldLibPathEnv = "PATH";
         }
@@ -554,14 +560,14 @@ public class Configuration
         }
     }
 
-    public String getTranslator()
+    public String getCompiler()
     {
-        return getTranslatorForHome(getIceHome());
+        return getCompilerForHome(getIceHome());
     }
 
     public static boolean verifyIceHome(String dir)
     {
-        if(getTranslatorForHome(dir) != null)
+        if(getCompilerForHome(dir) != null)
         {
             removeIceHomeWarnings();
             return true;
@@ -593,7 +599,10 @@ public class Configuration
                     marker.setAttribute(IMarker.MESSAGE, "Cannot locate Slice2Java compiler");
                 }
             }
-            catch(CoreException e) {} // Ignored
+            catch(CoreException e)
+            {
+                // Ignored
+            }
         }
     }
 
@@ -606,7 +615,10 @@ public class Configuration
             {
                 project.deleteMarkers(ICE_HOME_PROBLEM, false, IResource.DEPTH_ZERO);
             }
-            catch(CoreException e) {} // Ignored
+            catch(CoreException e)
+            {
+                // Ignored
+            }
         }
     }
 
@@ -645,14 +657,14 @@ public class Configuration
         return sb.toString();
     }
 
-    // Obtain the Ice version by executing the translator with the -v option.
+    // Obtain the Ice version by executing the compiler with the -v option.
     private String getIceVersion()
     {
         String iceHome = getIceHome();
         if(_version == null || !iceHome.equals(_iceHome))
         {
             _version = null;
-            String exec = getTranslatorForHome(getIceHome());
+            String exec = getCompilerForHome(getIceHome());
             if(exec != null)
             {
                 try
@@ -680,7 +692,7 @@ public class Configuration
         return _version;
     }
 
-    private static String getTranslatorForHome(String dir)
+    private static String getCompilerForHome(String dir)
     {
         String suffix = "";
         String os = System.getProperty("os.name");
