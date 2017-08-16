@@ -19,12 +19,13 @@ automatically
 ## Contents
 
  - [Installing the Ice Builder Plug-in](#installing-the-ice-builder-plug-in)
+ - [Upgrade Notes](#upgrade-notes)
  - [Usage](#Usage)
    - [Configuring the Plug-in](#configuring-the-plug-in)
    - [Activating the Plug-in for a Project](#activating-the-plug-in-for-a-project)
    - [Configuring Project Settings](#configuring-project-settings)
    - [Using the Plug-in](#using-the-plugin)
- - [Building the Plug-in fromSource](#building-the-plugin-from-source)
+ - [Building the Plug-in from Source](#building-the-plugin-from-source)
 
 ## Installing the Ice Builder Plug-in
 
@@ -60,27 +61,25 @@ settings as old settings are not automatically migrated.
 
 The plug-in preferences can be accessed by navigating to `Window -> Preferences`
 and selecting `Ice Builder`.
+
 ![Preferences Dialog](/Screenshots/preferences.png)
 
-You can use `Ice Home` to specify where `slice2java` and the associated Slice
+You can use `Ice Home` to specify where `slice2java` and the Ice Slice
 files are located. Ice Builder looks for `slice2java` in the `bin` subdirectory
 of `Ice Home`, and for the Slice files in the following subdirectories of `Ice Home`:
  - `share/slice`
  - `share/ice/slice`
- - `share/Ice-<version>/slice`, where <version> is the version returned by
+ - `share/Ice-<version>/slice`, where `<version>` is the output returned by
     `slice2java -v`
  - `slice`
 
-If you leave `Ice Home` unset, the Ice Builder uses the following `Ice Home`:
+The Ice Builder uses the following `Ice Home` directories by default:
 
 | Platform | Default Ice Home                                         |
 | -------- | -------------------------------------------------------- |
 | Linux    | /usr                                                     |
 | macOS    | /usr/local                                               |
 | Windows  | Latest Ice installation recorded in the Windows registry |
-
-Leaving `Ice Home` unset does not record the `Ice Home` path in your project
-file, which can be advantageous.
 
 `Build Automatically` allows you to choose whether Slice files should be rebuilt
 automatically as they are updated; it is generally recommended to disable this
@@ -91,10 +90,12 @@ option for larger projects.
 The plug-in is enabled on a per project basis. To enable it, right click on the
 project, choose `Ice Builder` and select `Add Ice Builder`.
 
+![Activating the Plug-in](/Screenshots/activation.png)
+
 Upon activation, the project immediately creates a `generated` directory to hold
 the Java source files the Slice compiler generates from your Slice files.
-![Activating the Plug-in](/Screenshots/activation.png)
-To de-activate the plug-in, navigate to the `Ice Builder` menu and select 
+
+To de-activate the plug-in, navigate to the `Ice Builder` menu and select
 `Remove Ice Builder`. Removing the Ice Builder plug-in will remove all the
 generated code but will not affect your Slice files.
 
@@ -102,9 +103,11 @@ generated code but will not affect your Slice files.
 
 To configure the project-specific settings, select `Properties` from the
 `Project` menu or right-click on the name of your project and choose
-`Properties`.  Click on the `Ice Builder` menu to view the plug-in's settings
+`Properties`. Click on the `Ice Builder` menu to view the plug-in's settings
 for the selected project.
+
 ![Project Properties Dialog](/Screenshots/properties.png)
+
 The `Generated Code Directory` allows you to specify where all generated files
 should be placed in the project. By default, the plug-in uses the `generated`
 directory for this. To change the directory, you must first create the new
@@ -114,8 +117,8 @@ to the directory will be lost during the next Slice compilation.
 
 The `Include Directories` list allows you to specify Slice include directories
 passed to `slice2java` through its `-I` option. These directories are searched
-by `slice2java` in the order you specified. The Ice Builder adds automatically
-the Slice directory found within `Ice Home` at the end of this list.
+by `slice2java` in the order you specify them. The Ice Builder automatically adds
+the Slice directory found within `Ice Home` to the end of this list.
 
 You can pass additional options to the Slice compiler with the `Additional
 Options` field. For a list of all supported options and their descriptions,
