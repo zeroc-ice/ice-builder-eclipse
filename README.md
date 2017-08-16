@@ -83,7 +83,7 @@ Leaving `Ice Home` unset does not record the `Ice Home` path in your project
 file, which can be advantageous.
 
 `Build Automatically` allows you to choose whether Slice files should be rebuilt
-automatically as the are updated; it is generally recommended to disable this
+automatically as they are updated; it is generally recommended to disable this
 option for larger projects.
 
 ### Activating the Plug-in for a Project
@@ -94,9 +94,9 @@ project, choose `Ice Builder` and select `Add Ice Builder`.
 Upon activation, the project immediately creates a `generated` directory to hold
 the Java source files the Slice compiler generates from your Slice files.
 ![Activating the Plug-in](/Screenshots/activation.png)
-To de-activate the plugin, simply navigate to the `Ice Builder` menu and instead
-select `Remove Ice Builder`. Note that removing the Ice Builder plug-in will not
-affect your Slice files, but will remove all generated code.
+To de-activate the plug-in, navigate to the `Ice Builder` menu and select 
+`Remove Ice Builder`. Removing the Ice Builder plug-in will remove all the
+generated code but will not affect your Slice files.
 
 ### Configuring Project Settings
 
@@ -105,21 +105,21 @@ To configure the project-specific settings, select `Properties` from the
 `Properties`.  Click on the `Ice Builder` menu to view the plug-in's settings
 for the selected project.
 ![Project Properties Dialog](/Screenshots/properties.png)
-The `Generated Code Directory` allows you to specify where all generated code
+The `Generated Code Directory` allows you to specify where all generated files
 should be placed in the project. By default, the plug-in uses the `generated`
 directory for this. To change the directory, you must first create the new
 directory, and then click `Browse` to navigate to it. The new directory must be
-empty, and the plug-in requires exclusive use of it; any files or changes made
+empty, and the plug-in requires exclusive use of it: any files or changes made
 to the directory will be lost during the next Slice compilation.
 
 The `Include Directories` list allows you to specify Slice include directories
-passed to `slice2java` through the `-I` option. These directories are searched
+passed to `slice2java` through its `-I` option. These directories are searched
 by `slice2java` in the order you specified. The Ice Builder adds automatically
 the Slice directory found within `Ice Home` at the end of this list.
 
 You can pass additional options to the Slice compiler with the `Additional
-Options` filed. For a list of all supported options and their descriptions,
-refer to `slice2java` page of the
+Options` field. For a list of all supported options and their descriptions,
+refer to the `slice2java` page in the
 [Ice Manual](https://doc.zeroc.com/display/Ice/slice2java+Command-Line+Options).
 
 ### Compiling Slice Files
@@ -127,8 +127,8 @@ refer to `slice2java` page of the
 Slice files can be manually compiled through Eclipse or by using the `Compile`
 Button under the `Ice Builder` project menu.
 
-If automatic building is enabled, Slice files will be compiled if either of
-the following are true:
+If automatic building is enabled, Slice files will be compiled if one of
+the following is true:
  * Any Slice files in the project have been updated since the last compilation
 through the plug-in (this includes removing Slice files from projects).
  * The options used to compile Slice files have changed.
