@@ -38,10 +38,10 @@ The Ice Builder for Eclipse is distributed through the Eclipse Marketplace:
 
 ### From Ice Builder 4.0
 
-The Ice Builder 4.0 adds automatically all the project's Slice directories
-to the list of include directories during compilation.
+The Ice Builder 4.0 adds all the project's Slice directories to the list of 
+include directories during compilation.
 
-Newer versions of Ice Builder no longer adds these directories to the list
+Newer versions of Ice Builder no longer add these directories to the list
 of include directories. As a result, when upgrading from Ice Builder 4.0 to
 the latest Ice Builder, you may need to add some of your project's Slice
 directories to the Include Directories (see
