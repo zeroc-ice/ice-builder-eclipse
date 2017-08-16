@@ -71,8 +71,7 @@ of `Ice Home`, and for the Slice files in the following subdirectories of `Ice H
     `slice2java -v`
  - `slice`
 
-If you leave `Ice Home` unset, the Ice Builder uses the following
-platform-depedent `Ice Home`:
+If you leave `Ice Home` unset, the Ice Builder uses the following `Ice Home`:
 
 | Platform | Default Ice Home                                         |
 | -------- | -------------------------------------------------------- |
