@@ -364,15 +364,16 @@ public class Configuration
     public List<String> getCommandLine()
     {
         List<String> cmds = new ArrayList<String>();
-        for(Iterator<String> p = getIncludes().iterator(); p.hasNext();)
-        {
-            cmds.add("-I" + p.next());
-        }
-        
+
         StringTokenizer tokens = new StringTokenizer(getExtraArguments());
         while(tokens.hasMoreTokens())
         {  
             cmds.add(tokens.nextToken().trim());
+        }
+
+        for(Iterator<String> p = getIncludes().iterator(); p.hasNext();)
+        {
+            cmds.add("-I" + p.next());
         }
 
         return cmds;
@@ -381,27 +382,8 @@ public class Configuration
     public List<String> getIncludes()
     {
         List<String> s = toList(_store.getString(INCLUDES_KEY));
-        
-        String iceHome = getIceHome();
-        String path = null;
-        if(!System.getProperty("os.name").startsWith("Windows") && 
-           (iceHome.equals("/usr") || iceHome.equals("/usr/local")))
-        {
-            String version = getIceVersion();
-            if(version != null)
-            {
-                File f = new File(iceHome + "/share/Ice-" + version + "/slice");
-                if(f.exists())
-                {
-                    path = f.toString();
-                }
-            }
-        }
-        if(path == null)
-        {
-            path = new File(iceHome + File.separator + "slice").toString();
-        }
-        s.add(path);
+        s.add(getSliceDirectory(getIceHome()));
+
         return s;
     }
 
@@ -567,7 +549,7 @@ public class Configuration
 
     public static boolean verifyIceHome(String dir)
     {
-        if(getCompilerForHome(dir) != null)
+        if((getCompilerForHome(dir) != null) && (getSliceDirectory(dir) != null))
         {
             removeIceHomeWarnings();
             return true;
@@ -658,7 +640,7 @@ public class Configuration
     }
 
     // Obtain the Ice version by executing the compiler with the -v option.
-    private String getIceVersion()
+    private static String getIceVersion()
     {
         String iceHome = getIceHome();
         if(_version == null || !iceHome.equals(_iceHome))
@@ -718,6 +700,32 @@ public class Configuration
         if(f.exists())
         {
             return f.toString();
+        }
+        return null;
+    }
+
+    private static String getSliceDirectory(String dir)
+    {
+        File file = new File(dir);
+        File sliceDirectory = new File(file, "share" + File.pathSeparator + "slice");
+        if(sliceDirectory.exists())
+        {
+            return sliceDirectory.getAbsolutePath();
+        }
+        sliceDirectory = new File(file, "share" + File.pathSeparator + "ice" + File.pathSeparator + "slice");
+        if(sliceDirectory.exists())
+        {
+            return sliceDirectory.getAbsolutePath();
+        }
+        sliceDirectory = new File(file, "share" + File.pathSeparator + "Ice-" + getIceVersion() + File.pathSeparator + "slice");
+        if(sliceDirectory.exists())
+        {
+            return sliceDirectory.getAbsolutePath();
+        }
+        sliceDirectory = new File(file, "slice");
+        if(sliceDirectory.exists())
+        {
+            return sliceDirectory.getAbsolutePath();
         }
         return null;
     }

@@ -75,40 +75,16 @@ public abstract class PropertyPage extends org.eclipse.ui.dialogs.PropertyPage
                 {
                     IPath projectLocation = project.getLocation();
                     IPath includeLocation = new Path(dir);
-                    String dev1 = projectLocation.getDevice();
-                    if(dev1 == null)
-                    {
-                        dev1 = "";
-                    }
-                    String dev2 = includeLocation.getDevice();
-                    if(dev2 == null)
-                    {
-                        dev2 = "";
-                    }
-                    IPath result;
 
-                    // If the directories are on different devices, then we have
-                    // no choice but to use an absolute path.
-                    if(!dev1.equals(dev2))
+                    // If the directory is located within the project,
+                    // Convert the absolute path to a relative path
+                    if(projectLocation.isPrefixOf(includeLocation))
                     {
-                        result = includeLocation;
-                    }
-                    else
-                    {
-
-                        // Convert the absolute path to a relative path.
                         int n = projectLocation.matchingFirstSegments(includeLocation);
-                        result = includeLocation.removeFirstSegments(n);
-
-                        IPath up = new Path("..");
-                        for(n = projectLocation.segmentCount() - n; n > 0; --n)
-                        {
-                            result = up.append(result);
-                        }
-                        // The devices must match, so remove it.
-                        result = result.setDevice(null);
+                        includeLocation = includeLocation.removeFirstSegments(n).setDevice(null);
                     }
-                    _includes.add(result.toString());
+
+                    _includes.add(includeLocation.toString());
                 }
             }
         });
