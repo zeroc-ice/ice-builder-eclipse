@@ -70,7 +70,7 @@ will not affect your Slice files, but will remove all generated code.
 ### Configuring Project Settings
 
 To configure the project-specific settings, select `Properties` from the `Project` menu or right-click on the name of your project and choose `Properties`.
-Click on the `Ice Builder` menu to to view the plug-in's settings for the selected project.
+Click on the `Ice Builder` menu to view the plug-in's settings for the selected project.
 ![Project Properties Dialog](/Screenshots/properties.png)
 The `Generated Code Directory` allows you to specify where all generated code should be placed in the project. By default, the plug-in uses the `generated`
 directory for this. To change the directory, you must first create the new directory, and then click `Browse` to navigate to it. The new directory must be empty,
@@ -79,7 +79,7 @@ and the plug-in requires exclusive use of it; any files or changes made to the d
 Any external Slice files your project is dependent upon can be specified using the `Include Directories` interface, where you can add directories 
 the compiler can search for referenced Slice definitions. These directories are searched in the order they're listed in the interface.
 
-For more advanced users, additional options can be passed directly to the Slice compiler with the `Advanced Options` section. For a list of all supported
+For more advanced users, additional options can be passed directly to the Slice compiler with the `Additional Options` section. For a list of all supported
 options and their descriptions, you can reference the `slice2java` command line section of the [Ice Manual](https://doc.zeroc.com/display/Ice/slice2java+Command-Line+Options).
 
 ### Compiling Slice Files
