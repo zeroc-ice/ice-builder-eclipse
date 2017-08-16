@@ -2,7 +2,7 @@
 <feature
       id="com.zeroc.IceBuilder"
       label="Ice Builder for Eclipse"
-      version="4.0.0.qualifier"
+      version="4.1.0.qualifier"
       provider-name="ZeroC, Inc.">
 
    <description url="https://zeroc.com">

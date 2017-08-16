@@ -9,6 +9,10 @@ package com.zeroc.icebuilderplugin;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.core.commands.ExecutionEvent;
+import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.commands.IExecutionListener;
+import org.eclipse.core.commands.NotHandledException;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -26,13 +30,14 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.commands.ICommandService;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
 import com.zeroc.icebuilderplugin.builder.Slice2JavaBuilder;
 import com.zeroc.icebuilderplugin.builder.Slice2JavaNature;
-import com.zeroc.icebuilderplugin.internal.IceClasspathContainerIntializer;
-import com.zeroc.icebuilderplugin.internal.IceClasspathVariableInitializer;
+import com.zeroc.icebuilderplugin.internal.Configuration;
 import com.zeroc.icebuilderplugin.preferences.PluginPreferencePage;
 
 /**
@@ -64,9 +69,8 @@ public class Activator extends AbstractUIPlugin
         super.start(context);
         _plugin = this;
         
-        IEclipsePreferences prefs = new InstanceScope().getNode(PLUGIN_ID);
+        IEclipsePreferences prefs = InstanceScope.INSTANCE.getNode(PLUGIN_ID);
         // set the listener for the preference change
-        //Preferences prefs = getPluginPreferences();
         prefs.addPreferenceChangeListener(new IPreferenceChangeListener()
         {
             public List<IJavaProject> getSlice2JavaProjects(IJavaModel javaModel)
@@ -99,14 +103,12 @@ public class Activator extends AbstractUIPlugin
             public void preferenceChange(PreferenceChangeEvent event)
             {
                 String property = event.getKey();
-                if(PluginPreferencePage.SDK_PATH.equals(property))
+                if(PluginPreferencePage.ICE_HOME.equals(property) && getPreferenceStore().getBoolean(PluginPreferencePage.BUILD_AUTO))
                 {
                     IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
                     IJavaModel javaModel = JavaCore.create(workspaceRoot);
                     List<IJavaProject> projects = getSlice2JavaProjects(javaModel);
-                    String value = (String)event.getNewValue();
-                    IceClasspathContainerIntializer.updateProjects(value, projects);
-                    IceClasspathVariableInitializer.update();
+
                     // Need to trigger a clean build of the projects.
                     for(final IJavaProject p : projects)
                     {
@@ -130,7 +132,52 @@ public class Activator extends AbstractUIPlugin
                         job.schedule(); // start as soon as possible
                     }
                 }
-                
+            }
+        });
+
+        // Add a listener for when the workbench is refreshed
+        ICommandService commandService = (ICommandService)PlatformUI.getWorkbench().getAdapter(ICommandService.class);
+        if(commandService != null)
+        {
+            commandService.addExecutionListener(new IExecutionListener()
+            {
+                @Override
+                public void notHandled(String commandId, NotHandledException exception)
+                {
+                }
+
+                @Override
+                public void postExecuteFailure(String commandId, ExecutionException exception)
+                {
+                }
+
+                @Override
+                public void postExecuteSuccess(String commandId, Object returnValue)
+                {
+                    if("org.eclipse.ui.file.refresh".equals(commandId))
+                    {
+                        PlatformUI.getWorkbench().getDisplay().syncExec(new Runnable()
+                        {
+                            public void run()
+                            {
+                                Configuration.verifyIceHome(Configuration.getIceHome());
+                            }
+                        });
+                    }
+                }
+
+                @Override
+                public void preExecute(String commandId, ExecutionEvent event)
+                {
+                }
+            });
+        }
+
+        PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable()
+        {
+            public void run()
+            {
+                Configuration.verifyIceHome(Configuration.getIceHome());
             }
         });
     }

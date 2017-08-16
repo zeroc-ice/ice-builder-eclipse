@@ -8,7 +8,7 @@ How to Contribute
 
 Follow these steps to contribute code or documentation to this project:
 
-1. Download and review carefully our [Contributor Agreement](https://zeroc.com/download/ZeroCContributorAgreement.pdf), and send us a completed and signed copy.
+1. Download and carefully review our [Contributor Agreement](https://zeroc.com/download/ZeroCContributorAgreement.pdf), and send us a completed and signed copy.
 
    Please sign this agreement with a pen, as we do not accept electronic signatures.<br/>
    Then email a scanned copy of this agreement to contributing@zeroc.com, or send us an original paper copy by [snail mail](https://zeroc.com/about.html#contact).

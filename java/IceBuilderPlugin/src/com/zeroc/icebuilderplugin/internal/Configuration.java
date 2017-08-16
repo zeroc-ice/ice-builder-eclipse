@@ -11,62 +11,141 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ProjectScope;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 import com.zeroc.icebuilderplugin.Activator;
+import com.zeroc.icebuilderplugin.builder.Slice2JavaNature;
 import com.zeroc.icebuilderplugin.preferences.PluginPreferencePage;
 
 public class Configuration
 {
-    public Configuration(IProject project)
+    private Configuration(IProject project)
     {
         _project = project;
-
-        _instanceStore = new ScopedPreferenceStore(new InstanceScope(), Activator.PLUGIN_ID + "." + _project.getName());
-
         _store = new ScopedPreferenceStore(new ProjectScope(project), Activator.PLUGIN_ID);
 
-        _androidProject = false;
-        try
+        // If the project contains old properties
+        if(_store.getString(VERSION_KEY) != "4.1")
         {
-            _androidProject = project.hasNature("com.android.ide.eclipse.adt.AndroidNature");
-        }
-        catch(CoreException e)
-        {
+            updateProperties();
         }
 
         _store.setDefault(GENERATED_KEY, GENERATED_KEY);
-        _store.setDefault(DEFINES_KEY, "");
-        _store.setDefault(TIE_KEY, false);
-        _store.setDefault(ICE_KEY, false);
-        _store.setDefault(STREAM_KEY, false);
-        _store.setDefault(ICE_INCLUDE_KEY, false);
-        _store.setDefault(META_KEY, "");
-        _store.setDefault(CONSOLE_KEY, false);
-        _store.setDefault(SLICE_SOURCE_DIRS_KEY, "slice");
         _store.setDefault(INCLUDES_KEY, "");
-        _store.setDefault(ADD_JARS_KEY, true);
-        _store.setDefault(UNDERSCORE_KEY, false);
+        _store.setDefault(EXTRA_ARGUMENTS_KEY, "");
+    }
 
-        _store.setDefault(JARS_KEY, getJarName("Ice"));
+    private void updateProperties()
+    {
+        String extraArguments = _store.getString(EXTRA_ARGUMENTS_KEY);
+
+        if(_store.getBoolean("ice"))
+        {
+            extraArguments += " --ice";
+        }
+        if(_store.getBoolean("tie"))
+        {
+            extraArguments += " --tie";
+        }
+        if(_store.getBoolean("underscore"))
+        {
+            extraArguments += " --underscore";
+        }
+
+        if((extraArguments.contains("--tie") || extraArguments.contains("--impl-tie"))
+                && !extraArguments.contains("--compat"))
+        {
+            extraArguments += " --compat";
+        }
+
+        String defines = _store.getString("defines");
+        if(defines.length() > 0)
+        {
+            extraArguments += " ";
+            for(Iterator<String> p = toList(defines).iterator(); p.hasNext();)
+            {
+                extraArguments += "-D" + p.next();
+                if(p.hasNext())
+                {
+                    extraArguments += " ";
+                }
+            }
+        }
+
+        String meta = _store.getString("meta");
+        if(meta.length() > 0)
+        {
+            extraArguments += " --meta";
+            for(Iterator<String> p = toList(meta).iterator(); p.hasNext();)
+            {
+                extraArguments += " " + p.next();
+            }
+        }
+
+        setValue("jars", "");
+        setValue("sliceSourceDirs", "");
+        setValue("console", "");
+        setValue("meta", "");
+        setValue("stream", "");
+        setValue("iceIncludes", "");
+        setValue("ice", "");
+        setValue("tie", "");
+        setValue("defines", "");
+        setValue("addJars", "");
+        setValue("underscore", "");
+
+        setValue(EXTRA_ARGUMENTS_KEY, extraArguments);
+        setValue(VERSION_KEY, "4.1");
+
+        PlatformUI.getWorkbench().getDisplay().syncExec(new Runnable()
+        {
+            public void run()
+            {
+                try
+                {
+                    write();
+                }
+                catch(IOException e)
+                {
+                    // Ignored
+                }
+                catch(CoreException e)
+                {
+                    // Ignored
+                }
+            }
+        });
+    }
+
+    public static Configuration getConfiguration(IProject project)
+    {
+        Configuration configuration = projectConfigurations.get(project);
+
+        if(configuration == null)
+        {
+            configuration = new Configuration(project);
+            projectConfigurations.put(project, configuration);
+        }
+
+        return configuration;
     }
 
     /**
@@ -146,56 +225,18 @@ public class Configuration
     public boolean write()
         throws CoreException, IOException
     {
-        boolean rc = false;
         if(_store.needsSaving())
         {
             _store.save();
-            rc = true;
-        }
-        if(_instanceStore.needsSaving())
-        {
-            _instanceStore.save();
-            rc = true;
+            return true;
         }
 
-        if(rc)
-        {
-            IJavaProject javaProject = JavaCore.create(_project);
-            if(getAddJars())
-            {
-                if(isAndroidProject())
-                {
-                    for(String jar : getJars())
-                    {
-                        addLibrary(javaProject, jar);
-                    }
-                }
-                else
-                {
-                    addLibrary(javaProject);
-                }
-            }
-            else
-            {
-                removeLibrary(javaProject);
-            }
-        }
-
-        return rc;
+        return false;
     }
 
     public void initialize()
         throws CoreException
     {
-        // Create the slice source directories, if necessary.
-        for(Iterator<String> p = getSliceSourceDirs().iterator(); p.hasNext();)
-        {
-            IFolder slice = _project.getFolder(p.next());
-            if(!slice.exists())
-            {
-                slice.create(false, true, null);
-            }
-        }
 
         // Create the generated directory, if necessary.
         IFolder generated = _project.getFolder(getGeneratedDir());
@@ -206,83 +247,23 @@ public class Configuration
 
         fixGeneratedCP(null, getGeneratedDir());
 
-        IJavaProject javaProject = JavaCore.create(_project);
-        if(isAndroidProject())
-        {
-            for(String jar : getJars())
-            {
-                addLibrary(javaProject, jar);
-            }
-        }
-        else
-        {
-            addLibrary(javaProject);
-        }
+        verifyIceHome(getIceHome());
     }
 
     public void deinstall()
         throws CoreException
     {
-        IJavaProject javaProject = JavaCore.create(_project);
-        if(isAndroidProject())
-        {
-            removeLibrary(javaProject, getJarName("Ice"));
-            removeLibrary(javaProject, getJarName("Glacier2"));
-            removeLibrary(javaProject, getJarName("IceBox"));
-            removeLibrary(javaProject, getJarName("IceGrid"));
-            removeLibrary(javaProject, getJarName("IceDiscovery"));
-            removeLibrary(javaProject, getJarName("IceLocatorDiscovery"));
-            removeLibrary(javaProject, getJarName("IcePatch2"));
-            removeLibrary(javaProject, getJarName("IceStorm"));
-        }
-        else
-        {
-            removeLibrary(javaProject);
-        }
         removedGeneratedCP();
         IFolder generatedFolder = _project.getFolder(getGeneratedDir());
         if(generatedFolder != null && generatedFolder.exists())
         {
             generatedFolder.delete(true, null);
         }
-    }
-    
-    public String getJarName(String base)
-    {
-        String version = getIceVersion();
-        
-        int intVersion = 306;
-        if(version != null)
-        {
-            String tokens[] = version.split(java.util.regex.Pattern.quote("."));
-            if(tokens.length >= 2)
-            {
-                intVersion = (Integer.parseInt(tokens[0]) * 100) + 
-                            Integer.parseInt(tokens[1]);
-            }
-        }
-        
-        if(intVersion >= 306)
-        {
-            base = base.toLowerCase() + "-" + version;
-        }
-    
-        return base + ".jar";
-    }
 
-    public boolean isAndroidProject()
-    {
-        return _androidProject;
-    }
+        _project.deleteMarkers(ICE_HOME_PROBLEM, false, IResource.DEPTH_INFINITE);
+        _project.deleteMarkers(SLICE_PROBLEM, false, IResource.DEPTH_INFINITE);
 
-    public List<String> getSliceSourceDirs()
-    {
-        return toList(_store.getString(SLICE_SOURCE_DIRS_KEY));
-    }
-
-    public void setSliceSourceDirs(List<String> sliceSourceDirs)
-    {
-        setValue(SLICE_SOURCE_DIRS_KEY, fromList(sliceSourceDirs));
+        projectConfigurations.remove(_project);
     }
 
     public String getGeneratedDir()
@@ -387,78 +368,11 @@ public class Configuration
         {
             cmds.add("-I" + p.next());
         }
-        for(Iterator<String> p = getDefines().iterator(); p.hasNext();)
-        {
-            cmds.add("-D" + p.next());
-        }
-        for(Iterator<String> p = getMeta().iterator(); p.hasNext();)
-        {
-            cmds.add("--meta");
-            cmds.add(p.next());
-        }
-        if(getStream())
-        {
-            cmds.add("--stream");
-        }
-        if(getTie())
-        {
-            cmds.add("--tie");
-        }
-        if(getIce())
-        {
-            cmds.add("--ice");
-        }
-        if(getUnderscore())
-        {
-            cmds.add("--underscore");
-        }
         
         StringTokenizer tokens = new StringTokenizer(getExtraArguments());
         while(tokens.hasMoreTokens())
         {  
-            cmds.add(tokens.nextToken());  
-        }
-
-        return cmds;
-    }
-    
-    public List<String> getCommandLine(IResource resource)
-    {
-        List<String> cmds = getCommandLine();
-        for(Iterator<String> p = getBareIncludes(resource).iterator(); p.hasNext();)
-        {
-            cmds.add("-I" + p.next());
-        }
-        for(Iterator<String> p = getDefines(resource).iterator(); p.hasNext();)
-        {
-            cmds.add("-D" + p.next());
-        }
-        for(Iterator<String> p = getMeta(resource).iterator(); p.hasNext();)
-        {
-            cmds.add("--meta");
-            cmds.add(p.next());
-        }
-        if(!getStream() && getStream(resource))
-        {
-            cmds.add("--stream");
-        }
-        if(!getTie() && getTie(resource))
-        {
-            cmds.add("--tie");
-        }
-        if(!getIce() && getIce(resource))
-        {
-            cmds.add("--ice");
-        }
-        if(!getUnderscore() && getUnderscore(resource))
-        {
-            cmds.add("--underscore");
-        }
-        
-        StringTokenizer tokens = new StringTokenizer(getExtraArguments(resource));
-        while(tokens.hasMoreTokens())
-        {  
-            cmds.add(tokens.nextToken());  
+            cmds.add(tokens.nextToken().trim());
         }
 
         return cmds;
@@ -496,220 +410,20 @@ public class Configuration
     {
         return toList(_store.getString(INCLUDES_KEY));
     }
-    
-    public List<String> getBareIncludes(IResource resource)
-    {
-        return toList(_store.getString(resourceKey(resource, INCLUDES_KEY)));
-    }
 
     public void setIncludes(List<String> includes)
     {
         setValue(INCLUDES_KEY, fromList(includes));
     }
     
-    public void setIncludes(IResource resource, List<String> includes)
-    {
-        setValue(resourceKey(resource, INCLUDES_KEY), fromList(includes));
-    }
-
-    public boolean getAddJars()
-    {
-        return _store.getBoolean(ADD_JARS_KEY);
-    }
-
-    public void setAddJars(boolean b)
-    {
-        _store.setValue(ADD_JARS_KEY, b);
-    }
-
-    public List<String> getJars()
-    {
-        return toList(_store.getString(JARS_KEY));
-    }
-
-    public void setJars(List<String> jars) throws CoreException
-    {
-        if(setValue(JARS_KEY, fromList(jars)))
-        {
-            if(isAndroidProject())
-            {
-                IJavaProject javaProject = JavaCore.create(_project);
-                ArrayList<String> removeJars = new ArrayList<String>();
-                removeJars.add(getJarName("Ice"));
-                removeJars.add(getJarName("IceBox"));
-                removeJars.add(getJarName("IceGrid"));
-                removeJars.add(getJarName("IcePatch2"));
-                removeJars.add(getJarName("IceStorm"));
-                removeJars.add(getJarName("IceDiscovery"));
-                removeJars.add(getJarName("IceLocatorDiscovery"));
-                removeJars.add(getJarName("Glacier2"));
-                
-                for(String jar : jars)
-                {
-                    removeJars.remove(jar);
-                    addLibrary(javaProject, jar);
-                }
-                
-                for(String jar : removeJars)
-                {
-                    removeLibrary(javaProject, jar);
-                }
-            }
-            else
-            {
-                IceClasspathContainerIntializer.reinitialize(_project, this);
-            }
-        }
-    }
-
-    public List<String> getDefines()
-    {
-        return toList(_store.getString(DEFINES_KEY));
-    }
-    
-    public List<String> getDefines(IResource resource)
-    {
-        return toList(_store.getString(resourceKey(resource, DEFINES_KEY)));
-    }
-
-    public void setDefines(List<String> defines)
-    {
-        setValue(DEFINES_KEY, fromList(defines));
-    }
-    
-    public void setDefines(IResource resource, List<String> defines)
-    {
-        setValue(resourceKey(resource, DEFINES_KEY), fromList(defines));
-    }
-
-    public boolean getStream()
-    {
-        return _store.getBoolean(STREAM_KEY);
-    }
-    
-    public boolean getStream(IResource resource)
-    {
-        return _store.getBoolean(resourceKey(resource, STREAM_KEY));
-    }
-
-    public void setStream(boolean stream)
-    {
-        _store.setValue(STREAM_KEY, stream);
-    }
-    
-    public void setStream(IResource resource, boolean stream)
-    {
-        _store.setValue(resourceKey(resource, STREAM_KEY), stream);
-    }
-
-    public boolean getTie()
-    {
-        return _store.getBoolean(TIE_KEY);
-    }
-    
-    public boolean getTie(IResource resource)
-    {
-        return _store.getBoolean(resourceKey(resource, TIE_KEY));
-    }
-
-    public void setTie(boolean tie)
-    {
-        _store.setValue(TIE_KEY, tie);
-    }
-    
-    public void setTie(IResource resource, boolean tie)
-    {
-        _store.setValue(resourceKey(resource, TIE_KEY), tie);
-    }
-
-    public boolean getIce()
-    {
-        return _store.getBoolean(ICE_KEY);
-    }
-    
-    public boolean getIce(IResource resource)
-    {
-        return _store.getBoolean(resourceKey(resource, ICE_KEY));
-    }
-
-    public void setIce(boolean ice)
-    {
-        _store.setValue(ICE_KEY, ice);
-    }
-    
-    public void setIce(IResource resource, boolean ice)
-    {
-        _store.setValue(resourceKey(resource, ICE_KEY), ice);
-    }
-
-    public boolean getUnderscore()
-    {
-        return _store.getBoolean(UNDERSCORE_KEY);
-    }
-    
-    public boolean getUnderscore(IResource resource)
-    {
-        return _store.getBoolean(resourceKey(resource, UNDERSCORE_KEY));
-    }
-
-    public void setUnderscore(boolean underscore)
-    {
-        _store.setValue(UNDERSCORE_KEY, underscore);
-    }
-    
-    public void setUnderscore(IResource resource, boolean underscore)
-    {
-        _store.setValue(resourceKey(resource, UNDERSCORE_KEY), underscore);
-    }
-
-    public boolean getConsole()
-    {
-        return _store.getBoolean(CONSOLE_KEY);
-    }
-
-    public void setConsole(boolean console)
-    {
-        _store.setValue(CONSOLE_KEY, console);
-    }
-
-    public List<String> getMeta()
-    {
-        return toList(_store.getString(META_KEY));
-    }
-    
-    public List<String> getMeta(IResource resource)
-    {
-        return toList(_store.getString(resourceKey(resource, META_KEY)));
-    }
-
-    public void setMeta(List<String> meta)
-    {
-        setValue(META_KEY, fromList(meta));
-    }
-    
-    public void setMeta(IResource resource, List<String> meta)
-    {
-        setValue(resourceKey(resource, META_KEY), fromList(meta));
-    }
-    
     public String getExtraArguments()
     {
         return _store.getString(EXTRA_ARGUMENTS_KEY);
-    }
-    
-    public String getExtraArguments(IResource resource)
-    {
-        return _store.getString(resourceKey(resource, EXTRA_ARGUMENTS_KEY));
     }
 
     public void setExtraArguments(String arguments)
     {
         setValue(EXTRA_ARGUMENTS_KEY, arguments);
-    }
-    
-    public void setExtraArguments(IResource resource, String arguments)
-    {
-        setValue(resourceKey(resource, EXTRA_ARGUMENTS_KEY), arguments);
     }
 
     public static void setupSharedLibraryPath(Map<String, String> env)
@@ -782,7 +496,7 @@ public class Configuration
             //
             // No need to change the PATH environment variable on Windows, the
             // DLLs should be found
-            // in the translator local directory.
+            // in the compiler local directory.
             //
             // ldLibPathEnv = "PATH";
         }
@@ -846,45 +560,66 @@ public class Configuration
         }
     }
 
-    public String getTranslator()
+    public String getCompiler()
     {
-        return getTranslatorForHome(getIceHome());
+        return getCompilerForHome(getIceHome());
     }
 
-    static public boolean verifyIceHome(String dir)
+    public static boolean verifyIceHome(String dir)
     {
-        return getTranslatorForHome(dir) != null;
-    }
-
-    public static String getJarDir()
-    {
-        String iceHome = getIceHome();
-        if(!System.getProperty("os.name").startsWith("Windows") && 
-           (iceHome.equals("/usr") || iceHome.equals("/usr/local")))
+        if(getCompilerForHome(dir) != null)
         {
-            File f = new File(iceHome + File.separator + "share" + File.separator + "java");
-            if(f.exists())
-            {
-                return f.toString();
-            }
+            removeIceHomeWarnings();
+            return true;
         }
 
-        File f = new File(iceHome + File.separator + "lib");
-        if(!f.exists())
-        {
-            File f2 = new File(iceHome + File.separator + "java" + File.separator + "lib");
-            if(f2.exists())
-            {
-                return f2.toString();
-            }
-        }
-        // Add the platform default even if it cannot be found.
-        return f.toString();
+        addIceHomeWarnings();
+        return false;
     }
 
-    private static String getIceHome()
+    public static String getIceHome()
     {
-        return Activator.getDefault().getPreferenceStore().getString(PluginPreferencePage.SDK_PATH);
+        return Activator.getDefault().getPreferenceStore().getString(PluginPreferencePage.ICE_HOME);
+    }
+
+    private static void addIceHomeWarnings()
+    {
+        for(IProject project :
+            ResourcesPlugin.getWorkspace().getRoot().getProjects(IProject.INCLUDE_HIDDEN))
+        {
+            try
+            {
+                if(project.hasNature(Slice2JavaNature.NATURE_ID) &&
+                        (project.findMarkers(ICE_HOME_PROBLEM, false, IResource.DEPTH_ZERO).length == 0))
+                {
+                    IMarker marker = project.createMarker(ICE_HOME_PROBLEM);
+                    marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
+                    marker.setAttribute(IMarker.PRIORITY, IMarker.PRIORITY_HIGH);
+                    marker.setAttribute(IMarker.LOCATION, "Ice Home");
+                    marker.setAttribute(IMarker.MESSAGE, "Cannot locate Slice2Java compiler");
+                }
+            }
+            catch(CoreException e)
+            {
+                // Ignored
+            }
+        }
+    }
+
+    private static void removeIceHomeWarnings()
+    {
+        for(IProject project :
+            ResourcesPlugin.getWorkspace().getRoot().getProjects(IProject.INCLUDE_HIDDEN))
+        {
+            try
+            {
+                project.deleteMarkers(ICE_HOME_PROBLEM, false, IResource.DEPTH_ZERO);
+            }
+            catch(CoreException e)
+            {
+                // Ignored
+            }
+        }
     }
 
     // For some reason ScopedPreferenceStore.setValue(String, String)
@@ -922,14 +657,14 @@ public class Configuration
         return sb.toString();
     }
 
-    // Obtain the Ice version by executing the translator with the -v option.
+    // Obtain the Ice version by executing the compiler with the -v option.
     private String getIceVersion()
     {
         String iceHome = getIceHome();
         if(_version == null || !iceHome.equals(_iceHome))
         {
             _version = null;
-            String exec = getTranslatorForHome(getIceHome());
+            String exec = getCompilerForHome(getIceHome());
             if(exec != null)
             {
                 try
@@ -957,7 +692,7 @@ public class Configuration
         return _version;
     }
 
-    private static String getTranslatorForHome(String dir)
+    private static String getCompilerForHome(String dir)
     {
         String suffix = "";
         String os = System.getProperty("os.name");
@@ -987,212 +722,23 @@ public class Configuration
         return null;
     }
 
-    private void addLibrary(IJavaProject project)
-        throws CoreException
-    {
-        IClasspathEntry cpEntry = null;
-        if(!isAndroidProject())
-        {
-            cpEntry = IceClasspathContainerIntializer.getContainerEntry();
-        }
-        else
-        {
-            final String iceJarPath = "ICE_JAR_HOME/" + getJarName("Ice"); 
-            cpEntry = JavaCore.newVariableEntry(new Path(iceJarPath), new Path(iceJarPath), 
-                                                new Path("ICE_JAR_HOME/lib/"), 
-                                                true);
-        }
-        
-        IClasspathEntry[] entries = project.getRawClasspath();
-        boolean found = false;
-        for(int i = 0; i < entries.length; ++i)
-        {
-            if(entries[i].equals(cpEntry))
-            {
-                found = true;
-                break;
-            }
-        }
+    private static final Map<IProject, Configuration> projectConfigurations =
+            new HashMap<IProject, Configuration>();
 
-        if(!found)
-        {
-            IClasspathEntry[] newEntries = new IClasspathEntry[entries.length + 1];
-            System.arraycopy(entries, 0, newEntries, 0, entries.length);
-            newEntries[entries.length] = cpEntry;
-
-            try
-            {
-                project.setRawClasspath(newEntries, null);
-            }
-            catch(JavaModelException e)
-            {
-                throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.toString(), null));
-            }
-        }
-    }
-    
-    private void addLibrary(IJavaProject project, String jar)
-        throws CoreException
-    {
-        IClasspathEntry cpEntry = JavaCore.newVariableEntry(new Path("ICE_JAR_HOME/" + jar), 
-                                                            new Path("ICE_JAR_HOME/" + jar), 
-                                                            new Path("ICE_JAR_HOME/"), 
-                                                            true);
-        
-        IClasspathEntry[] entries = project.getRawClasspath();
-        boolean found = false;
-        for(int i = 0; i < entries.length; ++i)
-        {
-            if(entries[i].equals(cpEntry))
-            {
-                found = true;
-                break;
-            }
-        }
-    
-        if(!found)
-        {
-            IClasspathEntry[] newEntries = new IClasspathEntry[entries.length + 1];
-            System.arraycopy(entries, 0, newEntries, 0, entries.length);
-            newEntries[entries.length] = cpEntry;
-    
-            try
-            {
-                project.setRawClasspath(newEntries, null);
-            }
-            catch(JavaModelException e)
-            {
-                throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.toString(), null));
-            }
-        }
-    }
-
-    public void removeLibrary(IJavaProject project)
-        throws CoreException
-    {
-        IClasspathEntry cpEntry = IceClasspathContainerIntializer.getContainerEntry();
-
-        IClasspathEntry[] entries = project.getRawClasspath();
-    
-        for(int i = 0; i < entries.length; ++i)
-        {
-            if(entries[i].equals(cpEntry))
-            {
-                IClasspathEntry[] newEntries = new IClasspathEntry[entries.length - 1];
-                System.arraycopy(entries, 0, newEntries, 0, i);
-                System.arraycopy(entries, i + 1, newEntries, i, entries.length - i - 1);
-    
-                try
-                {
-                    project.setRawClasspath(newEntries, null);
-                }
-                catch(JavaModelException e)
-                {
-                    throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.toString(), null));
-                }
-                break;
-            }
-        }
-    }
-    
-    public void removeLibrary(IJavaProject project, String lib)
-        throws CoreException
-    {
-        Path path = new Path("ICE_JAR_HOME/" + lib);
-        
-        IClasspathEntry[] entries = project.getRawClasspath();
-    
-        for(int i = 0; i < entries.length; ++i)
-        {
-            if(entries[i].getPath().equals(path))
-            {
-                IClasspathEntry[] newEntries = new IClasspathEntry[entries.length - 1];
-                System.arraycopy(entries, 0, newEntries, 0, i);
-                System.arraycopy(entries, i + 1, newEntries, i, entries.length - i - 1);
-    
-                try
-                {
-                    project.setRawClasspath(newEntries, null);
-                }
-                catch(JavaModelException e)
-                {
-                    throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.toString(), null));
-                }
-                break;
-            }
-        }
-    }
-    
-    //
-    // Check if the given resource has any Slice compiler options set.
-    //
-    public static boolean resourceHasOptions(IResource resource)
-    {
-        Configuration configuration = new Configuration(resource.getProject());
-        if(configuration.getDefines(resource) != null && configuration.getDefines(resource).size() > 0)
-        {
-            return true;
-        }
-        if(configuration.getMeta(resource) != null && configuration.getMeta(resource).size() > 0)
-        {
-            return true;
-        }
-        if(!configuration.getStream() && configuration.getStream(resource))
-        {
-            return true;
-        }
-        if(!configuration.getTie() && configuration.getTie(resource))
-        {
-            return true;
-        }
-        if(!configuration.getIce() && configuration.getIce(resource))
-        {
-            return true;
-        }
-        if(!configuration.getUnderscore() && configuration.getUnderscore(resource))
-        {
-            return true;
-        }
-        if(configuration.getExtraArguments(resource) != null && !configuration.getExtraArguments(resource).isEmpty())
-        {
-            return true;
-        }
-        return false;
-    }
-    
-    public static String resourceKey(IResource resource, String key)
-    {
-        return resource.getFullPath().toString() + "." + key;
-    }
-
-    private static final String JARS_KEY = "jars";
-    private static final String INCLUDES_KEY = "includes";
-    private static final String SLICE_SOURCE_DIRS_KEY = "sliceSourceDirs";
-    private static final String CONSOLE_KEY = "console";
-    private static final String META_KEY = "meta";
-    private static final String STREAM_KEY = "stream";
-    private static final String ICE_INCLUDE_KEY = "iceIncludes";
-    private static final String ICE_KEY = "ice";
-    private static final String TIE_KEY = "tie";
-    private static final String DEFINES_KEY = "defines";
+    private static final String VERSION_KEY = "builderVersion";
     private static final String GENERATED_KEY = "generated";
-    private static final String ADD_JARS_KEY = "addJars";
-    private static final String UNDERSCORE_KEY = "underscore";
-    
+    private static final String INCLUDES_KEY = "includes";
     private static final String EXTRA_ARGUMENTS_KEY = "extraArguments";
+
+    public static final String ICE_HOME_PROBLEM = "com.zeroc.IceBuilderPlugin.marker.IceHomeProblemMarker";
+    public static final String SLICE_PROBLEM = "com.zeroc.IceBuilderPlugin.marker.SliceProblemMarker";
 
     // Preferences store for items which should go in SCM. This includes things
     // like build flags.
     private ScopedPreferenceStore _store;
 
-    // Preferences store per project items which should not go in SCM, such as
-    // the location of the Ice installation.
-    private ScopedPreferenceStore _instanceStore;
-
     private IProject _project;
 
-    private boolean _androidProject;
-    
     private static String _version = null;
     private static String _iceHome = null;
 }

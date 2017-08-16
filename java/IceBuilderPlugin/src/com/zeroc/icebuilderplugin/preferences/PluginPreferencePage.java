@@ -6,8 +6,13 @@
 
 package com.zeroc.icebuilderplugin.preferences;
 
+import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.preference.*;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.IWorkbench;
@@ -28,13 +33,13 @@ import com.zeroc.icebuilderplugin.internal.Configuration;
 
 public class PluginPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage
 {
-    public static final String SDK_PATH = "pathPreference";
-    
+    public static final String ICE_HOME = "pathPreference";
+    public static final String BUILD_AUTO = "buildAutomatically";
+
     public PluginPreferencePage()
     {
         super(GRID);
         setPreferenceStore(Activator.getDefault().getPreferenceStore());
-        setDescription("Ice Builder Preferences");
     }
 
     /**
@@ -44,7 +49,25 @@ public class PluginPreferencePage extends FieldEditorPreferencePage implements I
      */
     public void createFieldEditors()
     {
-        addField(new SdkDirectoryFieldEditor(SDK_PATH, "&SDK Location:", getFieldEditorParent()));
+        Composite parent = getFieldEditorParent();
+
+        Group iceHomeGroup = new Group(parent, SWT.NONE);
+        iceHomeGroup.setText("Ice Home");
+        GridLayout gridLayout = new GridLayout();
+        gridLayout.numColumns = 1;
+        iceHomeGroup.setLayout(gridLayout);
+        iceHomeGroup.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+
+        Composite composite = new Composite(iceHomeGroup, SWT.NONE);
+        composite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+
+        DirectoryFieldEditor iceHome = new IceHomeDirectoryFieldEditor(ICE_HOME, "", composite);
+        iceHome.getTextControl(composite).setToolTipText("The directory containing your Ice installation.");
+        addField(iceHome);
+
+        BooleanFieldEditor buildAuto = new BooleanFieldEditor(BUILD_AUTO, "&Build automatically", parent);
+        buildAuto.getDescriptionControl(parent).setToolTipText("Sets if the project should be built after saving changes to it.");
+        addField(buildAuto);
     }
 
     /*
@@ -57,13 +80,12 @@ public class PluginPreferencePage extends FieldEditorPreferencePage implements I
     {
     }
 
-    private static class SdkDirectoryFieldEditor extends DirectoryFieldEditor
+    private static class IceHomeDirectoryFieldEditor extends DirectoryFieldEditor
     {
 
-        public SdkDirectoryFieldEditor(String name, String labelText, Composite parent)
+        public IceHomeDirectoryFieldEditor(String name, String labelText, Composite parent)
         {
             super(name, labelText, parent);
-            setEmptyStringAllowed(false);
         }
 
         /**
@@ -79,12 +101,16 @@ public class PluginPreferencePage extends FieldEditorPreferencePage implements I
         {
             String dir = getTextControl().getText();
             dir = dir.trim();
+
             if(!Configuration.verifyIceHome(dir))
             {
-                setErrorMessage("Invalid SDK Location");
-                return false;
+                getPage().setMessage("Invalid Ice Home Directory", IMessageProvider.ERROR);
             }
-            clearMessage();
+            else
+            {
+                clearMessage();
+            }
+
             return true;
         }
 

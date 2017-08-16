@@ -49,7 +49,7 @@ public class GeneratedDecorator implements ILabelDecorator
           return null;
         }
         IProject project = resource.getProject();
-        Configuration configuration = new Configuration(project);
+        Configuration configuration = Configuration.getConfiguration(project);
         IFolder generated = project.getFolder(configuration.getGeneratedDir());
         if(!generated.getLocation().toOSString().equals(resource.getLocation().toOSString()))
         {

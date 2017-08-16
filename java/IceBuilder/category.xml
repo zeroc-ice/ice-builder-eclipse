@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <feature url="features/com.zeroc.IceBuilder_4.0.0.qualifier.jar" id="com.zeroc.IceBuilder" version="4.0.0.qualifier">
+   <feature url="features/com.zeroc.IceBuilder_4.1.0.qualifier.jar" id="com.zeroc.IceBuilder" version="4.1.0.qualifier">
       <category name="com.zeroc"/>
    </feature>
    <category-def name="com.zeroc" label="ZeroC Eclipse Tools">

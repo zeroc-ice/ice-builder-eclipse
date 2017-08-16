@@ -31,10 +31,10 @@ import org.eclipse.ui.dialogs.SelectionDialog;
 import org.eclipse.ui.model.WorkbenchContentProvider;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
-class SourceSelectionDialog extends SelectionDialog
+class DirectorySelectionDialog extends SelectionDialog
 {
     // Do we allow multiple selections?
-    private boolean multiple = true;
+    private boolean multiple = false;
     
     // the root element to populate the viewer with
     private IProject root;
@@ -58,10 +58,10 @@ class SourceSelectionDialog extends SelectionDialog
      *            the message to be displayed at the top of this dialog, or
      *            <code>null</code> to display a default message
      */
-    public SourceSelectionDialog(Shell parentShell, IProject project, String message)
+    public DirectorySelectionDialog(Shell parentShell, IProject project, String message)
     {
         super(parentShell);
-        setTitle("Source Folder Selection");
+        setTitle("Folder Selection");
         root = project;
         if(message != null)
         {
@@ -69,7 +69,7 @@ class SourceSelectionDialog extends SelectionDialog
         }
         else
         {
-            setMessage("Select source folder:");
+            setMessage("Select folder:");
         }
     }
     

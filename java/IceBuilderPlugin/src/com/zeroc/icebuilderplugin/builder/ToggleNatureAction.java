@@ -61,7 +61,7 @@ public class ToggleNatureAction implements IObjectActionDelegate
      */
     public void selectionChanged(IAction action, ISelection selection)
     {
-        this._selection = selection;
+        _selection = selection;
         //action.setEnabled(false);
     }
 
@@ -101,8 +101,7 @@ public class ToggleNatureAction implements IObjectActionDelegate
                     description.setNatureIds(newNatures);
                     project.setDescription(description, null);
                     
-                    Configuration c = new Configuration(project);
-                    c.deinstall();
+                    Configuration.getConfiguration(project).deinstall();
              
                     return;
                 }
