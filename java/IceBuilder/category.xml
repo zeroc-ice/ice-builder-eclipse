@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
    <feature url="features/com.zeroc.IceBuilder_4.1.0.qualifier.jar" id="com.zeroc.IceBuilder" version="4.1.0.qualifier">
-      <category name="com.zeroc"/>
+      <category name="zeroc_eclipse_tools"/>
    </feature>
-   <category-def name="com.zeroc" label="ZeroC Eclipse Tools">
+   <category-def name="zeroc_eclipse_tools" label="ZeroC Eclipse Tools">
       <description>
          ZeroC Eclipse Tools
       </description>

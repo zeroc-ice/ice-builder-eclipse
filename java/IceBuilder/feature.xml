@@ -3,7 +3,8 @@
       id="com.zeroc.IceBuilder"
       label="Ice Builder for Eclipse"
       version="4.1.0.qualifier"
-      provider-name="ZeroC, Inc.">
+      provider-name="ZeroC, Inc."
+      plugin="com.zeroc.IceBuilderPlugin">
 
    <description url="https://zeroc.com">
       The Ice Builder plug-in manages the translation of Slice to Java.
@@ -18,6 +19,10 @@ This copy of the Ice Builder for Eclipse is licensed to you
 under the terms described in the license agreement attached to
 this distribution.
    </copyright>
+
+   <url>
+      <update label="ZeroC Eclipse Update Site" url="https://zeroc.com/download/eclipse/"/>
+   </url>
 
    <plugin
          id="com.zeroc.IceBuilderPlugin"
