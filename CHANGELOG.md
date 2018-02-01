@@ -3,6 +3,9 @@
 This file describes the change history for the Ice Builder for Eclipse
 plug-in.
 
+## Changes since version 4.1.0.20170816
+- Fixed a bug where ICE_HOME was incorrectly validated on Linux platforms
+
 ## Changes since version 4.0.0.20150721
 
 - Removed intrusive error popups, now all errors are printed directly

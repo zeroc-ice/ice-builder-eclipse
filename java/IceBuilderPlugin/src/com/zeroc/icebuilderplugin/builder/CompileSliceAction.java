@@ -1,3 +1,9 @@
+// **********************************************************************
+//
+// Copyright (c) 2008-2018 ZeroC, Inc. All rights reserved.
+//
+// **********************************************************************
+
 package com.zeroc.icebuilderplugin.builder;
 
 import java.util.Iterator;
