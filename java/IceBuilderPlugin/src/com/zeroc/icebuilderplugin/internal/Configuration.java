@@ -519,13 +519,13 @@ public class Configuration
         {
             if(ldLibPathEnv.equals(ldLib64PathEnv))
             {
-                libPath = libPath + File.pathSeparator + lib64Path;
+                libPath = libPath + File.separator + lib64Path;
             }
 
             String envLibPath = env.get(ldLibPathEnv);
             if(envLibPath != null)
             {
-                libPath = libPath + File.pathSeparator + envLibPath;
+                libPath = libPath + File.separator + envLibPath;
             }
 
             env.put(ldLibPathEnv, libPath);
@@ -536,7 +536,7 @@ public class Configuration
             String envLib64Path = env.get(ldLib64PathEnv);
             if(envLib64Path != null)
             {
-                lib64Path = lib64Path + File.pathSeparator + envLib64Path;
+                lib64Path = lib64Path + File.separator + envLib64Path;
             }
             env.put(ldLib64PathEnv, lib64Path);
         }
@@ -707,17 +707,17 @@ public class Configuration
     private static String getSliceDirectory(String dir)
     {
         File file = new File(dir);
-        File sliceDirectory = new File(file, "share" + File.pathSeparator + "slice");
+        File sliceDirectory = new File(file, "share" + File.separator + "slice");
         if(sliceDirectory.exists())
         {
             return sliceDirectory.getAbsolutePath();
         }
-        sliceDirectory = new File(file, "share" + File.pathSeparator + "ice" + File.pathSeparator + "slice");
+        sliceDirectory = new File(file, "share" + File.separator + "ice" + File.separator + "slice");
         if(sliceDirectory.exists())
         {
             return sliceDirectory.getAbsolutePath();
         }
-        sliceDirectory = new File(file, "share" + File.pathSeparator + "Ice-" + getIceVersion() + File.pathSeparator + "slice");
+        sliceDirectory = new File(file, "share" + File.separator + "Ice-" + getIceVersion() + File.separator + "slice");
         if(sliceDirectory.exists())
         {
             return sliceDirectory.getAbsolutePath();
