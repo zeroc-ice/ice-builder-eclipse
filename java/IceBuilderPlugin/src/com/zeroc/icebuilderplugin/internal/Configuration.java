@@ -1,8 +1,6 @@
-// **********************************************************************
 //
-// Copyright (c) 2008-present ZeroC, Inc. All rights reserved.
+// Copyright (c) ZeroC, Inc. All rights reserved.
 //
-// **********************************************************************
 
 package com.zeroc.icebuilderplugin.internal;
 
